@@ -1,0 +1,7 @@
+{
+    "editor.codeLens": true,
+    "rest-client.enableSendRequestCodeLens": true,
+    "files.associations": {
+        "*.http": "http"
+    }
+}
