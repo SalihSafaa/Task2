@@ -1,8 +1,67 @@
-@ProductCatalogApi_HostAddress = http://localhost:5206
+@HostAddress = http://localhost:5206
 
-GET {{ProductCatalogApi_HostAddress}}/weatherforecast/
-Accept: application/json
+### Weather forecast
+GET {{HostAddress}}/weatherforecast
 
-###
+### Products - Get all
+GET {{HostAddress}}/api/Products
 
-GET http://localhost:5206/weatherforecast
+### Products - Get by id
+GET {{HostAddress}}/api/Products/4
+
+### Products - Create
+POST {{HostAddress}}/api/Products
+Content-Type: application/json
+
+{
+  "name": "Laptop",
+  "price": 999.99,
+  "stock": 25,
+  "createdAt": "2026-09-01T10:00:00",
+  "categoryId": 1
+}
+
+### Products - Update
+PUT {{HostAddress}}/api/Products/4
+Content-Type: application/json
+
+{
+  "id": 9,
+  "name": "Laptop Pro",
+  "price": 1299.99,
+  "stock": 15,
+  "createdAt": "2026-09-01T10:00:00",
+  "categoryId": 3
+}
+
+### Products - Delete
+DELETE {{HostAddress}}/api/Products/4
+
+### Categories - Get all
+GET {{HostAddress}}/api/Categories
+
+### Categories - Get by id
+GET {{HostAddress}}/api/Categories/1
+
+### Categories - Create
+POST {{HostAddress}}/api/Categories
+Content-Type: application/json
+
+{
+  "name": "Electronics",
+  "description": "Devices and accessories"
+}
+
+### Categories - Update
+PUT {{HostAddress}}/api/Categories/1
+Content-Type: application/json
+
+{
+  "id": 1,
+  "name": "Electronics Updated",
+  "description": "Updated devices and accessories"
+}
+
+### Categories - Delete
+DELETE {{HostAddress}}/api/Categories/1
+
