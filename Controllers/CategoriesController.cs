@@ -8,19 +8,21 @@ using Microsoft.EntityFrameworkCore;
 public class CategoriesController : ControllerBase
 {
     private readonly AppDbContext _context;
+    private readonly ILogger<CategoriesController> _logger;
 
-    public CategoriesController(AppDbContext context)
+    public CategoriesController(AppDbContext context, ILogger<CategoriesController> logger)
     {
         _context = context;
+        _logger = logger;
     }
 
     [HttpGet]
-    public async Task<ActionResult<IEnumerable<Category>>> GetCategories()
+    public async Task<ActionResult<IEnumerable<CategoryDto>>> GetCategories()
     {
-        return await _context.Categories.ToListAsync();
+        return await _context.Categories.Select(c => c.ToDto()).ToListAsync();
     }
     [HttpGet("{id:int}")]
-    public async Task<ActionResult<Category>> GetCategory(int id)
+    public async Task<ActionResult<CategoryDto>> GetCategory(int id)
     {
         var category = await _context.Categories.FindAsync(id);
 
@@ -29,41 +31,42 @@ public class CategoriesController : ControllerBase
             return NotFound();
         }
 
-        return category;
+        return category.ToDto();
+    }
+    [HttpGet("{id:int}/products")]
+    public async Task<ActionResult<IEnumerable<ProductDto>>> GetProductsByCategory(int id)
+    {
+        var categoryExists = await _context.Categories.AnyAsync(c => c.Id == id);
+        if (!categoryExists)
+        {
+            return NotFound();
+        }
+
+        return await _context.Products.Where(p => p.CategoryId == id).Select(p => p.ToDto()).ToListAsync();
     }
     [HttpPost]
-    public async Task<ActionResult<Category>> CreateCategory(Category category)
+    public async Task<ActionResult<CategoryDto>> CreateCategory(CreateCategoryDto createCategoryDto)
     {
+        var category = createCategoryDto.ToEntity();
         _context.Categories.Add(category);
         await _context.SaveChangesAsync();
 
-        return CreatedAtAction(nameof(GetCategory), new { id = category.Id }, category);
+        _logger.LogInformation($"Category created with ID: {category.Id} at {DateTime.UtcNow}");
+        return CreatedAtAction(nameof(GetCategory), new { id = category.Id }, category.ToDto());
     }
     [HttpPut("{id:int}")]
-    public async Task<IActionResult> UpdateCategory(int id, Category category)
+    public async Task<IActionResult> UpdateCategory(int id, UpdateCategoryDto updateCategoryDto)
     {
-        if (id != category.Id)
+        var category = await _context.Categories.FindAsync(id);
+        if (category == null)
         {
-            return BadRequest();
+            _logger.LogWarning($"Attempted to update a non-existent category with ID: {id} at {DateTime.UtcNow}");
+            return NotFound();
         }
-
         _context.Entry(category).State = EntityState.Modified;
-        try
-        {
-            await _context.SaveChangesAsync();
-        }
-        catch (Exception)
-        {
-            if (!CategoryExists(id))
-            {
-                return NotFound();
-            }
-            else
-            {
-                throw;
-            }
-        }
-
+        updateCategoryDto.UpdateEntity(category);
+        await _context.SaveChangesAsync();
+        _logger.LogInformation($"Category with ID: {id} updated successfully at {DateTime.UtcNow}");
         return NoContent();
     }
 
@@ -73,12 +76,14 @@ public class CategoriesController : ControllerBase
         var category = await _context.Categories.FindAsync(id);
         if (category == null)
         {
+            _logger.LogWarning($"Attempted to delete a non-existent category with ID: {id} at {DateTime.UtcNow}");
             return NotFound();
         }
 
         _context.Categories.Remove(category);
         await _context.SaveChangesAsync();
 
+        _logger.LogInformation($"Category with ID: {id} deleted successfully at {DateTime.UtcNow}");
         return NoContent();
     }
 

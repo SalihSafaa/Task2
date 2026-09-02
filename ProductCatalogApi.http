@@ -1,13 +1,9 @@
 @HostAddress = http://localhost:5206
-
-### Weather forecast
-GET {{HostAddress}}/weatherforecast
-
 ### Products - Get all
 GET {{HostAddress}}/api/Products
 
 ### Products - Get by id
-GET {{HostAddress}}/api/Products/4
+GET {{HostAddress}}/api/Products/8
 
 ### Products - Create
 POST {{HostAddress}}/api/Products
@@ -18,47 +14,48 @@ Content-Type: application/json
   "price": 999.99,
   "stock": 25,
   "createdAt": "2026-09-01T10:00:00",
-  "categoryId": 1
+  "categoryId": 6
 }
 
 ### Products - Update
-PUT {{HostAddress}}/api/Products/4
+PUT {{HostAddress}}/api/Products/8
 Content-Type: application/json
 
 {
-  "id": 9,
   "name": "Laptop Pro",
   "price": 1299.99,
   "stock": 15,
   "createdAt": "2026-09-01T10:00:00",
-  "categoryId": 3
+  "categoryId": 5
 }
 
 ### Products - Delete
-DELETE {{HostAddress}}/api/Products/4
+DELETE {{HostAddress}}/api/Products/9
 
 ### Categories - Get all
 GET {{HostAddress}}/api/Categories
 
 ### Categories - Get by id
-GET {{HostAddress}}/api/Categories/1
+GET {{HostAddress}}/api/Categories/4
+
+### Categories - Get products by category
+GET {{HostAddress}}/api/Categories/5/products
 
 ### Categories - Create
 POST {{HostAddress}}/api/Categories
 Content-Type: application/json
 
 {
-  "name": "Electronics",
+  "name": "New Electronics",
   "description": "Devices and accessories"
 }
 
 ### Categories - Update
-PUT {{HostAddress}}/api/Categories/1
+PUT {{HostAddress}}/api/Categories/5
 Content-Type: application/json
 
 {
-  "id": 1,
-  "name": "Electronics Updated",
+  "name": "Updated Electronics",
   "description": "Updated devices and accessories"
 }
 

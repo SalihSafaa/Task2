@@ -1,28 +1,31 @@
-# Build output
+# Build artifacts
 bin/
 obj/
+TestResults/
+coverage/
+*.log
+logs/
 
-# Visual Studio and VS Code user files
+# Visual Studio / IDE
 .vs/
+.vscode/
 *.user
 *.suo
 *.userosscache
 *.sln.docstates
+*.dbmdl
+*.jfm
+.idea/
+*.swp
+*.sln.iml
 
-# Test and coverage output
-TestResults/
-coverage/
-
-# Local environment and secrets
+# Local configuration and secrets
 .env
 .env.*
 !.env.example
 appsettings.Local.json
 appsettings.*.Local.json
 
-# OS files
+# Operating system
 .DS_Store
 Thumbs.db
-
-# JetBrains Rider
-.idea/
