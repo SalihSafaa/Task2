@@ -48,6 +48,7 @@ public static class MappingExtentions
         originalProduct.Stock = newproductDto.Stock;
         originalProduct.CategoryId = newproductDto.CategoryId;
     }
+
     public static void UpdateEntity(this UpdateCategoryDto newCategoryDto, Category originalCategory)
     {
         originalCategory.Name = newCategoryDto.Name;

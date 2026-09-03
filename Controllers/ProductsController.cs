@@ -15,11 +15,38 @@ public class ProductsController : ControllerBase
         _context = context;
         _logger = logger;
     }
-
-    [HttpGet]
-    public async Task<ActionResult<IEnumerable<ProductDto>>> GetProducts()
+    [HttpGet] // api/products?pageNumber=1&pageSize=10&search=&categoryId=&minPrice=
+    public async Task<ActionResult<PaginationResponseDto<ProductDto>>> GetProducts([FromQuery] PaginationRequestDto query)
     {
-        return await _context.Products.Select(p => p.ToDto()).ToListAsync();
+        var products = _context.Products.AsQueryable();
+
+        if (!string.IsNullOrWhiteSpace(query.Search))
+            products = products.Where(p => p.Name.Contains(query.Search));
+
+        if (query.CategoryId.HasValue)
+            products = products.Where(p => p.CategoryId == query.CategoryId.Value);
+
+        if (query.MinPrice.HasValue)
+            products = products.Where(p => p.Price >= query.MinPrice.Value);
+
+        var totalCount = await products.CountAsync();
+
+
+        var items = await products
+            .Skip((query.PageNumber - 1) * query.PageSize)
+            .Take(query.PageSize)
+            .Select(p => p.ToDto())
+            .ToListAsync();
+
+        var response = new PaginationResponseDto<ProductDto>
+        {
+            Items = items,
+            TotalCount = totalCount,
+            PageNumber = query.PageNumber,
+            PageSize = query.PageSize
+        };
+
+        return Ok(response);
     }
 
     [HttpGet("{id:int}")]
@@ -34,7 +61,6 @@ public class ProductsController : ControllerBase
 
         return product.ToDto();
     }
-
     [HttpPost]
     public async Task<ActionResult<ProductDto>> CreateProduct(CreateProductDto createProductDto)
     {

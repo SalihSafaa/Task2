@@ -1,6 +1,8 @@
 @HostAddress = http://localhost:5206
-### Products - Get all
-GET {{HostAddress}}/api/Products
+### Products - Get 100 
+### /api/products?pageNumber=1&pageSize=100&search=&categoryId=&minPrice=  ###
+GET {{HostAddress}}/api/Products?pageNumber=1&pageSize=100&categoryId=5
+
 
 ### Products - Get by id
 GET {{HostAddress}}/api/Products/8
@@ -60,5 +62,13 @@ Content-Type: application/json
 }
 
 ### Categories - Delete
-DELETE {{HostAddress}}/api/Categories/1
+DELETE {{HostAddress}}/api/Categories/7
 
+### Reports - Get Inventory Value
+GET {{HostAddress}}/api/Reports/inventory-value
+### Reports - Get Most Expensive Product
+GET {{HostAddress}}/api/Reports/most-expensive
+### out of stock products
+GET {{HostAddress}}/api/Reports/out-of-stock
+### Category stats 
+GET {{HostAddress}}/api/Reports/category-stats

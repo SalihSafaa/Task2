@@ -64,7 +64,9 @@ public class CategoriesController : ControllerBase
             return NotFound();
         }
         _context.Entry(category).State = EntityState.Modified;
+
         updateCategoryDto.UpdateEntity(category);
+
         await _context.SaveChangesAsync();
         _logger.LogInformation($"Category with ID: {id} updated successfully at {DateTime.UtcNow}");
         return NoContent();
