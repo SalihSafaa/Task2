@@ -88,9 +88,4 @@ public class CategoriesController : ControllerBase
         _logger.LogInformation("Category with ID: {CategoryId} deleted successfully", id);
         return NoContent();
     }
-
-    private bool CategoryExists(int id)
-    {
-        return _context.Categories.Any(e => e.Id == id);
-    }
 }
