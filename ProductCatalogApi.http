@@ -1,7 +1,9 @@
 @HostAddress = http://localhost:5206
 ### Products - Get 100 
 ### /api/products?pageNumber=1&pageSize=100&search=&categoryId=&minPrice=  ###
-GET {{HostAddress}}/api/Products?pageNumber=1&pageSize=100&categoryId=5
+GET {{HostAddress}}/api/Products?pageNumber=1&pageSize=100
+###
+GET  {{HostAddress}}/api/Products
 
 
 ### Products - Get by id
@@ -12,15 +14,15 @@ POST {{HostAddress}}/api/Products
 Content-Type: application/json
 
 {
-  "name": "Laptop",
-  "price": 999.99,
+  "name": "Laptop overpriced",
+  "price": 999.9999,
   "stock": 25,
   "createdAt": "2026-09-01T10:00:00",
-  "categoryId": 6
+  "categoryId": 8
 }
 
 ### Products - Update
-PUT {{HostAddress}}/api/Products/8
+PUT {{HostAddress}}/api/Products/50
 Content-Type: application/json
 
 {
@@ -28,7 +30,7 @@ Content-Type: application/json
   "price": 1299.99,
   "stock": 15,
   "createdAt": "2026-09-01T10:00:00",
-  "categoryId": 5
+  "categoryId": 8
 }
 
 ### Products - Delete

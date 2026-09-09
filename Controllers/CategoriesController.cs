@@ -51,7 +51,7 @@ public class CategoriesController : ControllerBase
         _context.Categories.Add(category);
         await _context.SaveChangesAsync();
 
-        _logger.LogInformation($"Category created with ID: {category.Id} at {DateTime.UtcNow}");
+        _logger.LogInformation("Category created with ID: {CategoryId}", category.Id);
         return CreatedAtAction(nameof(GetCategory), new { id = category.Id }, category.ToDto());
     }
     [HttpPut("{id:int}")]
@@ -60,7 +60,7 @@ public class CategoriesController : ControllerBase
         var category = await _context.Categories.FindAsync(id);
         if (category == null)
         {
-            _logger.LogWarning($"Attempted to update a non-existent category with ID: {id} at {DateTime.UtcNow}");
+            _logger.LogWarning("Attempted to update a non-existent category with ID: {CategoryId}", id);
             return NotFound();
         }
         _context.Entry(category).State = EntityState.Modified;
@@ -68,7 +68,7 @@ public class CategoriesController : ControllerBase
         updateCategoryDto.UpdateEntity(category);
 
         await _context.SaveChangesAsync();
-        _logger.LogInformation($"Category with ID: {id} updated successfully at {DateTime.UtcNow}");
+        _logger.LogInformation("Category with ID: {CategoryId} updated successfully", id);
         return NoContent();
     }
 
@@ -78,14 +78,14 @@ public class CategoriesController : ControllerBase
         var category = await _context.Categories.FindAsync(id);
         if (category == null)
         {
-            _logger.LogWarning($"Attempted to delete a non-existent category with ID: {id} at {DateTime.UtcNow}");
+            _logger.LogWarning("Attempted to delete a non-existent category with ID: {CategoryId}", id);
             return NotFound();
         }
 
         _context.Categories.Remove(category);
         await _context.SaveChangesAsync();
 
-        _logger.LogInformation($"Category with ID: {id} deleted successfully at {DateTime.UtcNow}");
+        _logger.LogInformation("Category with ID: {CategoryId} deleted successfully", id);
         return NoContent();
     }
 

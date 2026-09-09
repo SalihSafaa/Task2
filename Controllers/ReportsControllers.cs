@@ -22,7 +22,7 @@ public class ReportsController : ControllerBase
         var total = await _context.Products
             .SumAsync(p => p.Price * p.Stock);
 
-        return Ok(new ReportsDto { TotalValue = total });
+        return Ok(new ReportsDto { TotalValue = Math.Round(total, 2) });
     }
     [HttpGet("most-expensive")]
     public async Task<ActionResult<ProductDto>> GetMostExpensiveProduct()
@@ -58,7 +58,7 @@ public class ReportsController : ControllerBase
     {
         var stats = await _context.Products
             .GroupBy(p => new { p.CategoryId, p.Category!.Name })
-            .Select(g => new CategoryStatsDto
+            .Select(g => new
             {
                 CategoryId = g.Key.CategoryId,
                 CategoryName = g.Key.Name,
@@ -67,6 +67,14 @@ public class ReportsController : ControllerBase
             })
             .ToListAsync();
 
-        return Ok(stats);
+        var result = stats.Select(stat => new CategoryStatsDto
+        {
+            CategoryId = stat.CategoryId,
+            CategoryName = stat.CategoryName,
+            ProductCount = stat.ProductCount,
+            AveragePrice = Math.Round(stat.AveragePrice, 2)
+        });
+
+        return Ok(result);
     }
 }

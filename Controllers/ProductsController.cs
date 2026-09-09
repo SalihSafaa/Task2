@@ -67,7 +67,7 @@ public class ProductsController : ControllerBase
         var categoryExists = await _context.Categories.AnyAsync(c => c.Id == createProductDto.CategoryId);
         if (!categoryExists)
         {
-            _logger.LogWarning($"Attempted to create a product with an invalid category ID: {createProductDto.CategoryId} at {DateTime.UtcNow}");
+            _logger.LogWarning("Attempted to create a product with an invalid category ID: {CategoryId}", createProductDto.CategoryId);
             return BadRequest("Invalid category ID");
         }
 
@@ -75,7 +75,7 @@ public class ProductsController : ControllerBase
         _context.Products.Add(product);
         await _context.SaveChangesAsync();
 
-        _logger.LogInformation($"Product created with ID: {product.Id} and Category ID: {product.CategoryId} at {DateTime.UtcNow}");
+        _logger.LogInformation("Product created with ID: {ProductId} and Category ID: {CategoryId}", product.Id, product.CategoryId);
         return CreatedAtAction(nameof(GetProduct), new { id = product.Id }, product.ToDto());
     }
 
@@ -85,20 +85,20 @@ public class ProductsController : ControllerBase
         var product = await _context.Products.FindAsync(id);
         if (product == null)
         {
-            _logger.LogWarning($"Attempted to update a non-existent product with ID: {id} at {DateTime.UtcNow}");
+            _logger.LogWarning("Attempted to update a non-existent product with ID: {ProductId}", id);
             return NotFound();
         }
 
         var categoryExists = await _context.Categories.AnyAsync(c => c.Id == updateProductDto.CategoryId);
         if (!categoryExists)
         {
-            _logger.LogWarning($"Attempted to update product ID: {id} with an invalid category ID: {updateProductDto.CategoryId} at {DateTime.UtcNow}");
+            _logger.LogWarning("Attempted to update product ID: {ProductId} with an invalid category ID: {CategoryId}", id, updateProductDto.CategoryId);
             return BadRequest("category not found");
         }
 
         updateProductDto.UpdateEntity(product);
         await _context.SaveChangesAsync();
-        _logger.LogInformation($"Product with ID: {id} updated successfully at {DateTime.UtcNow}");
+        _logger.LogInformation("Product with ID: {ProductId} updated successfully", id);
         return NoContent();
     }
 
@@ -108,14 +108,14 @@ public class ProductsController : ControllerBase
         var product = await _context.Products.FindAsync(id);
         if (product == null)
         {
-            _logger.LogWarning($"Attempted to delete a non-existent product with ID: {id} at {DateTime.UtcNow}");
+            _logger.LogWarning("Attempted to delete a non-existent product with ID: {ProductId}", id);
             return NotFound();
         }
 
         _context.Products.Remove(product);
         await _context.SaveChangesAsync();
 
-        _logger.LogInformation($"Product with ID: {id} deleted successfully at {DateTime.UtcNow}");
+        _logger.LogInformation("Product with ID: {ProductId} deleted successfully", id);
         return NoContent();
     }
 }
