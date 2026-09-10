@@ -12,7 +12,9 @@ Log.Logger = new LoggerConfiguration()
 builder.Host.UseSerilog();
 // Add services to the container.
 // Add services to the container.
-
+builder.Services.AddScoped<ICategoriesService, CategoriesService>();
+builder.Services.AddScoped<IProductsService, ProductsService>();
+builder.Services.AddScoped<IReportsService, ReportsService>();
 builder.Services.AddControllers();
 builder.Services.AddDbContext<AppDbContext>(options =>
     options.UseSqlServer(builder.Configuration.GetConnectionString("DefaultConnection")));

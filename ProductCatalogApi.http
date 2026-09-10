@@ -40,31 +40,31 @@ DELETE {{HostAddress}}/api/Products/9
 GET {{HostAddress}}/api/Categories
 
 ### Categories - Get by id
-GET {{HostAddress}}/api/Categories/4
+GET {{HostAddress}}/api/Categories/8
 
 ### Categories - Get products by category
-GET {{HostAddress}}/api/Categories/5/products
+GET {{HostAddress}}/api/Categories/8/products
 
 ### Categories - Create
 POST {{HostAddress}}/api/Categories
 Content-Type: application/json
 
 {
-  "name": "New Electronics",
-  "description": "Devices and accessories"
+  "name": "New digital books",
+  "description": " difital books licensea and ebooks"
 }
 
 ### Categories - Update
-PUT {{HostAddress}}/api/Categories/5
+PUT {{HostAddress}}/api/Categories/9
 Content-Type: application/json
 
 {
-  "name": "Updated Electronics",
-  "description": "Updated devices and accessories"
+  "name": "Updated digital books",
+  "description": "Updated digital books and ebooks"
 }
 
 ### Categories - Delete
-DELETE {{HostAddress}}/api/Categories/7
+DELETE {{HostAddress}}/api/Categories/9
 
 ### Reports - Get Inventory Value
 GET {{HostAddress}}/api/Reports/inventory-value
