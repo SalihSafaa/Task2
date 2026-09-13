@@ -9,6 +9,7 @@ public class AppDbContext : DbContext
     }
     public DbSet<Product> Products { get; set; }
     public DbSet<Category> Categories { get; set; }
+    public DbSet<User> Users { get; set; }
 
     protected override void OnModelCreating(ModelBuilder modelBuilder)
     {
@@ -16,5 +17,6 @@ public class AppDbContext : DbContext
         modelBuilder.Entity<Product>().Property(p => p.Price).HasPrecision(18, 2);
         modelBuilder.Entity<Product>().HasOne(p => p.Category).WithMany(c => c.Products)
         .HasForeignKey(p => p.CategoryId).OnDelete(DeleteBehavior.Cascade);
+        modelBuilder.Entity<User>().HasIndex(user => user.Username).IsUnique();
     }
 }

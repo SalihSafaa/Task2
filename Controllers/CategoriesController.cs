@@ -1,6 +1,8 @@
+using Microsoft.AspNetCore.Authorization;
+using Microsoft.AspNetCore.Mvc;
+
 namespace ProductCatalogApi;
 
-using Microsoft.AspNetCore.Mvc;
 [ApiController]
 [Route("api/[controller]")]
 public class CategoriesController : ControllerBase
@@ -39,56 +41,32 @@ public class CategoriesController : ControllerBase
         return Ok(result.Value);
     }
     [HttpPost]
+    [Authorize]
     public async Task<ActionResult<CategoryDto>> CreateCategory(CreateCategoryDto createCategoryDto)
     {
         var result = await _service.CreateCategoryAsync(createCategoryDto);
         if (!result.IsSuccess)
-        {
-            return result.ErrorType switch
-            {
-                ErrorType.NotFound => (ActionResult<CategoryDto>)NotFound(result.ErrorMessage),
-                ErrorType.Validation => (ActionResult<CategoryDto>)BadRequest(result.ErrorMessage),
-                ErrorType.Conflict => (ActionResult<CategoryDto>)Conflict(result.ErrorMessage),
-                ErrorType.UnAuthorized => (ActionResult<CategoryDto>)Unauthorized(result.ErrorMessage),
-                _ => (ActionResult<CategoryDto>)StatusCode(500, "An unexpected error occurred."),
-            };
-        }
+            return this.ToActionResult(result);
         return CreatedAtAction(nameof(GetCategory), new { id = result.Value!.Id }, result.Value);
     }
     [HttpPut("{id:int}")]
+    [Authorize]
     public async Task<IActionResult> UpdateCategory(int id, UpdateCategoryDto updateCategoryDto)
     {
         var result = await _service.UpdateCategoryAsync(id, updateCategoryDto);
         if (!result.IsSuccess)
-        {
-            return result.ErrorType switch
-            {
-                ErrorType.NotFound => NotFound(result.ErrorMessage),
-                ErrorType.Validation => BadRequest(result.ErrorMessage),
-                ErrorType.Conflict => Conflict(result.ErrorMessage),
-                ErrorType.UnAuthorized => Unauthorized(result.ErrorMessage),
-                _ => StatusCode(500, "An unexpected error occurred."),
-            };
-        }
+            return this.ToActionResult(result);
 
         return NoContent();
     }
 
     [HttpDelete("{id:int}")]
+    [Authorize]
     public async Task<IActionResult> DeleteCategory(int id)
     {
         var result = await _service.DeleteCategoryAsync(id);
         if (!result.IsSuccess)
-        {
-            return result.ErrorType switch
-            {
-                ErrorType.NotFound => NotFound(result.ErrorMessage),
-                ErrorType.Validation => BadRequest(result.ErrorMessage),
-                ErrorType.Conflict => Conflict(result.ErrorMessage),
-                ErrorType.UnAuthorized => Unauthorized(result.ErrorMessage),
-                _ => StatusCode(500, "An unexpected error occurred."),
-            };
-        }
+            return this.ToActionResult(result);
         return NoContent();
     }
 }

@@ -58,7 +58,6 @@ public class CategoriesService : ICategoriesService
             return Result<bool>.Failure(ErrorType.NotFound, $"Category with ID {id} not found.");
         }
 
-        _context.Entry(category).State = EntityState.Modified;
         updateCategoryDto.UpdateEntity(category);
 
         await _context.SaveChangesAsync();

@@ -1,6 +1,8 @@
+using Microsoft.AspNetCore.Authorization;
+using Microsoft.AspNetCore.Mvc;
+
 namespace ProductCatalogApi;
 
-using Microsoft.AspNetCore.Mvc;
 [ApiController]
 [Route("api/[controller]")]
 public class ProductsController : ControllerBase
@@ -15,6 +17,9 @@ public class ProductsController : ControllerBase
     public async Task<ActionResult<PaginationResponseDto<ProductDto>>> GetProducts([FromQuery] PaginationRequestDto query)
     {
         var result = await _service.GetProductsAsync(query);
+        if (!result.IsSuccess)
+            return this.ToActionResult(result);
+
         return Ok(result.Value);
     }
 
@@ -28,58 +33,34 @@ public class ProductsController : ControllerBase
         return Ok(result.Value);
     }
     [HttpPost]
+    [Authorize]
     public async Task<ActionResult<ProductDto>> CreateProduct(CreateProductDto createProductDto)
     {
         var result = await _service.CreateProductAsync(createProductDto);
         if (!result.IsSuccess)
-        {
-            return result.ErrorType switch
-            {
-                ErrorType.NotFound => (ActionResult<ProductDto>)NotFound(result.ErrorMessage),
-                ErrorType.Validation => (ActionResult<ProductDto>)BadRequest(result.ErrorMessage),
-                ErrorType.Conflict => (ActionResult<ProductDto>)Conflict(result.ErrorMessage),
-                ErrorType.UnAuthorized => (ActionResult<ProductDto>)Unauthorized(result.ErrorMessage),
-                _ => (ActionResult<ProductDto>)StatusCode(500, "An unexpected error occurred."),
-            };
-        }
+            return this.ToActionResult(result);
 
         return CreatedAtAction(nameof(GetProduct), new { id = result.Value!.Id }, result.Value);
     }
 
     [HttpPut("{id:int}")]
+    [Authorize]
     public async Task<IActionResult> UpdateProduct(int id, UpdateProductDto updateProductDto)
     {
         var result = await _service.UpdateProductAsync(id, updateProductDto);
         if (!result.IsSuccess)
-        {
-            return result.ErrorType switch
-            {
-                ErrorType.NotFound => NotFound(result.ErrorMessage),
-                ErrorType.Validation => BadRequest(result.ErrorMessage),
-                ErrorType.Conflict => Conflict(result.ErrorMessage),
-                ErrorType.UnAuthorized => Unauthorized(result.ErrorMessage),
-                _ => StatusCode(500, "An unexpected error occurred."),
-            };
-        }
+            return this.ToActionResult(result);
 
         return NoContent();
     }
 
     [HttpDelete("{id:int}")]
+    [Authorize]
     public async Task<IActionResult> DeleteProduct(int id)
     {
         var result = await _service.DeleteProductAsync(id);
         if (!result.IsSuccess)
-        {
-            return result.ErrorType switch
-            {
-                ErrorType.NotFound => NotFound(result.ErrorMessage),
-                ErrorType.Validation => BadRequest(result.ErrorMessage),
-                ErrorType.Conflict => Conflict(result.ErrorMessage),
-                ErrorType.UnAuthorized => Unauthorized(result.ErrorMessage),
-                _ => StatusCode(500, "An unexpected error occurred."),
-            };
-        }
+            return this.ToActionResult(result);
 
         return NoContent();
     }
