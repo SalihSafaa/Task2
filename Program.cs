@@ -14,7 +14,6 @@ Log.Logger = new LoggerConfiguration()
 
 builder.Host.UseSerilog();
 // Add services to the container.
-// Add services to the container.
 builder.Services.AddOptions<JwtOptions>()
     .Bind(builder.Configuration.GetSection(JwtOptions.SectionName));
 builder.Services.AddAuthentication(JwtBearerDefaults.AuthenticationScheme)
