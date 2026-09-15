@@ -8,6 +8,13 @@
   </PropertyGroup>
 
   <ItemGroup>
+    <Compile Remove="ProductCatalogApi.Tests\**" />
+    <Content Remove="ProductCatalogApi.Tests\**;**\bin\**;**\obj\**" />
+    <EmbeddedResource Remove="ProductCatalogApi.Tests\**;**\bin\**;**\obj\**" />
+    <None Remove="ProductCatalogApi.Tests\**;**\bin\**;**\obj\**" />
+  </ItemGroup>
+
+  <ItemGroup>
     <PackageReference Include="Isopoh.Cryptography.Argon2" Version="2.0.0" />
     <PackageReference Include="Microsoft.AspNetCore.Authentication.JwtBearer" Version="10.0.11" />
     <PackageReference Include="Microsoft.AspNetCore.OpenApi" Version="10.0.11" />
