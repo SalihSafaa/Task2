@@ -14,8 +14,14 @@ Log.Logger = new LoggerConfiguration()
 
 builder.Host.UseSerilog();
 // Add services to the container.
+builder.Services.AddProblemDetails();
+builder.Services.AddExceptionHandler<ExceptionHandlingMiddleware>();
+
 builder.Services.AddOptions<JwtOptions>()
     .Bind(builder.Configuration.GetSection(JwtOptions.SectionName));
+
+builder.Services.AddOptions<PasswordHashOptions>()
+    .Bind(builder.Configuration.GetSection(PasswordHashOptions.SectionName));
 
 builder.Services.AddAuthentication(JwtBearerDefaults.AuthenticationScheme)
     .AddJwtBearer(options =>
@@ -50,6 +56,8 @@ builder.Services.AddSwaggerGen();
 
 
 var app = builder.Build();
+
+app.UseExceptionHandler(_ => { });
 
 if (app.Environment.IsDevelopment())
 {

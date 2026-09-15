@@ -29,7 +29,7 @@ public class UserService : IUserService
 
         if (usernameExists)
         {
-            return Result<UserResponseDto>.Failure(ErrorType.Conflict, "Username is already in use.");
+            return Result<UserResponseDto>.Failure(ErrorType.Conflict, $"Username '{username}' is already in use. Please choose a different username.");
         }
 
         var user = new User
@@ -56,7 +56,7 @@ public class UserService : IUserService
         if (user is null || !_passwordHasher.Verify(request.Password, user.PasswordHash))
         {
             _logger.LogWarning("Failed login attempt for username: {Username}", username);
-            return Result<LoginResponseDto>.Failure(ErrorType.UnAuthorized, "Invalid username or password.");
+            return Result<LoginResponseDto>.Failure(ErrorType.UnAuthorized, "Invalid username or password. Please check your credentials and try again.");
         }
 
         return Result<LoginResponseDto>.Success(new LoginResponseDto

@@ -13,25 +13,31 @@ public class ProductDto //showing product to the user
 }
 public class CreateProductDto //validating data from user
 {
-    [Required]
-    [MaxLength(100)]
+    [Required(ErrorMessage = "Product name is required.")]
+    [MaxLength(100, ErrorMessage = "Product name cannot exceed 100 characters.")]
     public string Name { get; set; } = string.Empty;
-    [Range(0.1, 1000000)]//1M
+
+    [Range(0.01, 1000000, ErrorMessage = "Price must be between 0.01 and 1000000.")]
     public decimal Price { get; set; }
-    [Range(0, int.MaxValue)]
+
+    [Range(0, int.MaxValue, ErrorMessage = "Stock cannot be negative.")]
     public int Stock { get; set; }
+
+    [Range(1, int.MaxValue, ErrorMessage = "Category ID must be a valid positive number.")]
     public int CategoryId { get; set; }
 }
 public class UpdateProductDto //validating data from user
 {
-    [Required]
-    [MaxLength(100)]
+    [Required(ErrorMessage = "Product name is required.")]
+    [MaxLength(100, ErrorMessage = "Product name cannot exceed 100 characters.")]
     public string Name { get; set; } = string.Empty;
 
-    [Range(0.1, 1000000)]
+    [Range(0.01, 1000000, ErrorMessage = "Price must be between 0.01 and 1000000.")]
     public decimal Price { get; set; }
 
-    [Range(0, int.MaxValue)]
+    [Range(0, int.MaxValue, ErrorMessage = "Stock cannot be negative.")]
     public int Stock { get; set; }
+
+    [Range(1, int.MaxValue, ErrorMessage = "Category ID must be a valid positive number.")]
     public int CategoryId { get; set; }
 }

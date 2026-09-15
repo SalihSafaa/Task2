@@ -4,21 +4,21 @@ namespace ProductCatalogApi;
 
 public class RegisterRequestDto
 {
-    [Required]
-    [StringLength(50, MinimumLength = 3)]
+    [Required(ErrorMessage = "Username is required.")]
+    [StringLength(50, MinimumLength = 3, ErrorMessage = "Username must be between 3 and 50 characters long.")]
     public string Username { get; set; } = string.Empty;
 
-    [Required]
-    [StringLength(100, MinimumLength = 8)]
+    [Required(ErrorMessage = "Password is required.")]
+    [StringLength(100, MinimumLength = 8, ErrorMessage = "Password must be at least 8 characters long and no more than 100 characters.")]
     public string Password { get; set; } = string.Empty;
 }
 
 public class LoginRequestDto
 {
-    [Required]
+    [Required(ErrorMessage = "Username is required.")]
     public string Username { get; set; } = string.Empty;
 
-    [Required]
+    [Required(ErrorMessage = "Password is required.")]
     public string Password { get; set; } = string.Empty;
 }
 

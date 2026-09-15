@@ -18,7 +18,7 @@ public class AuthController : ControllerBase
     {
         var result = await _userService.RegisterAsync(request);
         if (!result.IsSuccess)
-            return Conflict(result.ErrorMessage);
+            return this.ToActionResult(result);
 
         return Created("api/auth/register", result.Value);
     }
@@ -28,7 +28,7 @@ public class AuthController : ControllerBase
     {
         var result = await _userService.LoginAsync(request);
         if (!result.IsSuccess)
-            return Unauthorized(result.ErrorMessage);
+            return this.ToActionResult(result);
 
         return Ok(result.Value);
     }

@@ -28,7 +28,7 @@ public class ProductsController : ControllerBase
     {
         var result = await _service.GetProductAsync(id);
         if (!result.IsSuccess)
-            return NotFound(result.ErrorMessage);
+            return this.ToActionResult(result);
 
         return Ok(result.Value);
     }

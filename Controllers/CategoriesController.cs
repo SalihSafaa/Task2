@@ -19,7 +19,7 @@ public class CategoriesController : ControllerBase
     {
         var result = await _service.GetCategoriesAsync();
         if (!result.IsSuccess)
-            return NotFound(result.ErrorMessage);
+            return this.ToActionResult(result);
         return Ok(result.Value);
     }
     [HttpGet("{id:int}")]
@@ -27,7 +27,7 @@ public class CategoriesController : ControllerBase
     {
         var result = await _service.GetCategoryAsync(id);
         if (!result.IsSuccess)
-            return NotFound(result.ErrorMessage);
+            return this.ToActionResult(result);
 
         return Ok(result.Value);
     }
@@ -36,7 +36,7 @@ public class CategoriesController : ControllerBase
     {
         var result = await _service.GetProductsByCategoryAsync(id);
         if (!result.IsSuccess)
-            return NotFound(result.ErrorMessage);
+            return this.ToActionResult(result);
 
         return Ok(result.Value);
     }

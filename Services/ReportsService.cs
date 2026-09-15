@@ -33,7 +33,7 @@ public class ReportsService : IReportsService
         if (product == null)
         {
             _logger.LogWarning("Attempted to retrieve the most expensive product when no products exist");
-            return Result<ProductDto?>.Failure(ErrorType.NotFound, "No products exist");
+            return Result<ProductDto?>.Failure(ErrorType.NotFound, "No products exist yet. Please add a product before requesting this report.");
         }
 
         return Result<ProductDto?>.Success(product.ToDto());

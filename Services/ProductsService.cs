@@ -50,7 +50,7 @@ public class ProductsService : IProductsService
         if (product == null)
         {
             _logger.LogWarning("Attempted to retrieve a non-existent product with ID: {ProductId}", id);
-            return Result<ProductDto?>.Failure(ErrorType.NotFound, $"Product with ID {id} not found.");
+            return Result<ProductDto?>.Failure(ErrorType.NotFound, $"Product with ID {id} was not found.");
         }
         return Result<ProductDto?>.Success(product.ToDto());
     }
@@ -61,7 +61,7 @@ public class ProductsService : IProductsService
         if (!categoryExists)
         {
             _logger.LogWarning("Attempted to create a product with an invalid category ID: {CategoryId}", createProductDto.CategoryId);
-            return Result<ProductDto>.Failure(ErrorType.Validation, "Invalid category ID");
+            return Result<ProductDto>.Failure(ErrorType.Validation, $"Category with ID {createProductDto.CategoryId} was not found. Please select a valid category.");
         }
 
         var product = createProductDto.ToEntity();
@@ -78,14 +78,14 @@ public class ProductsService : IProductsService
         if (product == null)
         {
             _logger.LogWarning("Attempted to update a non-existent product with ID: {ProductId}", id);
-            return Result<bool>.Failure(ErrorType.NotFound, $"Product with ID {id} not found.");
+            return Result<bool>.Failure(ErrorType.NotFound, $"Product with ID {id} was not found.");
         }
 
         var categoryExists = await _context.Categories.AnyAsync(c => c.Id == updateProductDto.CategoryId);
         if (!categoryExists)
         {
             _logger.LogWarning("Attempted to update product ID: {ProductId} with an invalid category ID: {CategoryId}", id, updateProductDto.CategoryId);
-            return Result<bool>.Failure(ErrorType.Validation, "Category not found");
+            return Result<bool>.Failure(ErrorType.Validation, $"Category with ID {updateProductDto.CategoryId} was not found. Please select a valid category.");
         }
 
         updateProductDto.UpdateEntity(product);
@@ -100,7 +100,7 @@ public class ProductsService : IProductsService
         if (product == null)
         {
             _logger.LogWarning("Attempted to delete a non-existent product with ID: {ProductId}", id);
-            return Result<bool>.Failure(ErrorType.NotFound, $"Product with ID {id} not found.");
+            return Result<bool>.Failure(ErrorType.NotFound, $"Product with ID {id} was not found.");
         }
 
         _context.Products.Remove(product);

@@ -23,7 +23,7 @@ public class CategoriesService : ICategoriesService
         if (category == null)
         {
             _logger.LogWarning("Attempted to retrieve a non-existent category with ID: {CategoryId}", id);
-            return Result<CategoryDto?>.Failure(ErrorType.NotFound, $"Category with ID {id} not found.");
+            return Result<CategoryDto?>.Failure(ErrorType.NotFound, $"Category with ID {id} was not found.");
         }
         return Result<CategoryDto?>.Success(category.ToDto());
     }
@@ -33,7 +33,7 @@ public class CategoriesService : ICategoriesService
         if (!categoryExists)
         {
             _logger.LogWarning("Attempted to retrieve products for a non-existent category with ID: {CategoryId}", id);
-            return Result<IEnumerable<ProductDto>>.Failure(ErrorType.NotFound, $"Category with ID {id} not found.");
+            return Result<IEnumerable<ProductDto>>.Failure(ErrorType.NotFound, $"Category with ID {id} was not found. Please select an existing category.");
         }
 
         var products = await _context.Products.Where(p => p.CategoryId == id).Select(p => p.ToDto()).ToListAsync();
@@ -55,7 +55,7 @@ public class CategoriesService : ICategoriesService
         if (category == null)
         {
             _logger.LogWarning("Attempted to update a non-existent category with ID: {CategoryId}", id);
-            return Result<bool>.Failure(ErrorType.NotFound, $"Category with ID {id} not found.");
+            return Result<bool>.Failure(ErrorType.NotFound, $"Category with ID {id} was not found.");
         }
 
         updateCategoryDto.UpdateEntity(category);
@@ -71,7 +71,7 @@ public class CategoriesService : ICategoriesService
         if (category == null)
         {
             _logger.LogWarning("Attempted to delete a non-existent category with ID: {CategoryId}", id);
-            return Result<bool>.Failure(ErrorType.NotFound, $"Category with ID {id} not found.");
+            return Result<bool>.Failure(ErrorType.NotFound, $"Category with ID {id} was not found.");
         }
 
         _context.Categories.Remove(category);
