@@ -32,4 +32,17 @@ public class UserResponseDto
 public class LoginResponseDto
 {
     public string AccessToken { get; set; } = string.Empty;
+    public string RefreshToken { get; set; } = string.Empty;
+}
+public class UserUpdateDto
+{
+    public int Id { get; set; }
+
+    [Required(ErrorMessage = "Role is required.")]
+    public string Role { get; set; } = string.Empty;
+}
+public class RefreshRequestDto
+{
+    [Required(ErrorMessage = "Refresh token is required.")]
+    public string RefreshToken { get; set; } = string.Empty;
 }

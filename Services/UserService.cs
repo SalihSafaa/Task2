@@ -7,17 +7,20 @@ public class UserService : IUserService
     private readonly AppDbContext _context;
     private readonly IPasswordHasher _passwordHasher;
     private readonly IJwtTokenService _jwtTokenService;
+    private readonly IRefreshTokenService _refreshTokenService;
     private readonly ILogger<UserService> _logger;
 
     public UserService(
         AppDbContext context,
         IPasswordHasher passwordHasher,
         IJwtTokenService jwtTokenService,
+        IRefreshTokenService refreshTokenService,
         ILogger<UserService> logger)
     {
         _context = context;
         _passwordHasher = passwordHasher;
         _jwtTokenService = jwtTokenService;
+        _refreshTokenService = refreshTokenService;
         _logger = logger;
     }
 
@@ -59,10 +62,60 @@ public class UserService : IUserService
             return Result<LoginResponseDto>.Failure(ErrorType.UnAuthorized, "Invalid username or password. Please check your credentials and try again.");
         }
 
+        var refreshToken = await _refreshTokenService.GenerateAsync(user);
+
         return Result<LoginResponseDto>.Success(new LoginResponseDto
         {
-            AccessToken = _jwtTokenService.CreateToken(user)
+            AccessToken = _jwtTokenService.CreateToken(user),
+            RefreshToken = refreshToken
         });
+    }
+
+    public async Task<Result<LoginResponseDto>> RefreshAsync(string refreshToken)
+    {
+        var result = await _refreshTokenService.ValidateAndRotateAsync(refreshToken);
+        if (!result.IsSuccess)
+        {
+            return Result<LoginResponseDto>.Failure(result.ErrorType, result.ErrorMessage!);
+        }
+
+        var (user, newRawRefreshToken) = result.Value;
+
+        return Result<LoginResponseDto>.Success(new LoginResponseDto
+        {
+            AccessToken = _jwtTokenService.CreateToken(user),
+            RefreshToken = newRawRefreshToken
+        });
+    }
+
+    public async Task LogoutAsync(string refreshToken)
+    {
+        await _refreshTokenService.RevokeAsync(refreshToken);
+    }
+
+    public async Task<Result<UserResponseDto>> UserUpdate(UserUpdateDto userUpdateDto)
+    {
+        if (string.IsNullOrWhiteSpace(userUpdateDto.Role))
+        {
+            return Result<UserResponseDto>.Failure(ErrorType.Validation, "Role is required.");
+        }
+
+        var role = userUpdateDto.Role.Trim();
+
+        var user = await _context.Users
+            .SingleOrDefaultAsync(candidate => candidate.Id == userUpdateDto.Id);
+
+        if (user is null)
+        {
+            return Result<UserResponseDto>.Failure(ErrorType.NotFound, "User was not found.");
+        }
+
+        user.Role = role;
+        await _context.SaveChangesAsync();
+
+        _logger.LogInformation("User updated with ID: {UserId}", user.Id);
+
+        return Result<UserResponseDto>.Success(ToResponse(user));
     }
 
     private static UserResponseDto ToResponse(User user) => new()

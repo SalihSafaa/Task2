@@ -1,8 +1,8 @@
 @HostAddress = http://localhost:5206
-@Token=Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJodHRwOi8vc2NoZW1hcy54bWxzb2FwLm9yZy93cy8yMDA1LzA1L2lkZW50aXR5L2NsYWltcy9uYW1laWRlbnRpZmllciI6IjEiLCJodHRwOi8vc2NoZW1hcy54bWxzb2FwLm9yZy93cy8yMDA1LzA1L2lkZW50aXR5L2NsYWltcy9uYW1lIjoidGVzdHVzZXIiLCJodHRwOi8vc2NoZW1hcy5taWNyb3NvZnQuY29tL3dzLzIwMDgvMDYvaWRlbnRpdHkvY2xhaW1zL3JvbGUiOiJBZG1pbiIsImV4cCI6MTc4OTQ2MDY2MywiaXNzIjoiUHJvZHVjdENhdGFsb2dBcGkiLCJhdWQiOiJQcm9kdWN0Q2F0YWxvZ0FwaSJ9.N1Y2_ZznM6WvcFiRNrXVvyGWuR1YWtJaQEm48zeTjYY
-### Products - Get 100 
+@Token=Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJodHRwOi8vc2NoZW1hcy54bWxzb2FwLm9yZy93cy8yMDA1LzA1L2lkZW50aXR5L2NsYWltcy9uYW1laWRlbnRpZmllciI6IjEiLCJodHRwOi8vc2NoZW1hcy54bWxzb2FwLm9yZy93cy8yMDA1LzA1L2lkZW50aXR5L2NsYWltcy9uYW1lIjoidGVzdHVzZXIiLCJodHRwOi8vc2NoZW1hcy5taWNyb3NvZnQuY29tL3dzLzIwMDgvMDYvaWRlbnRpdHkvY2xhaW1zL3JvbGUiOiJBZG1pbiIsImV4cCI6MTc4OTU2Mzg4MiwiaXNzIjoiUHJvZHVjdENhdGFsb2dBcGkiLCJhdWQiOiJQcm9kdWN0Q2F0YWxvZ0FwaSJ9.-K-221mfyKz_Hf6S884gRL5_cCP4WKbc5FzMDmfcpn4
+@savedRefreshToken =3jANlY8HHAlelT/7l4uHxdDsi1gNM//ekTr8syTxrAWdgMHp9UI3fHfGxpuDu8r7esao5BwZT88xeFNX9eackA==
 ### /api/products?pageNumber=1&pageSize=100&search=&categoryId=&minPrice=  ###
-GET {{HostAddress}}/api/Products?pageNumber=1&pageSize=100
+GET {{HostAddress}}/api/Products?pageNumber=2&pageSize=10
 ###
 GET  {{HostAddress}}/api/Products
 
@@ -94,4 +94,103 @@ Content-Type: application/json
 {
   "username": "testuser",
   "password": "TestPassword123!"
+}
+### update user
+PUT {{HostAddress}}/api/Auth/user
+Authorization: {{Token}}
+Content-Type: application/json
+
+{
+  "id": 2,
+  "role": "admin"
+}
+
+
+### === REFRESH TOKEN FLOW ===
+
+### 1. Login — capture the refresh token from the response
+### After running this, copy the "refreshToken" value from the response
+### into @savedRefreshToken below
+POST {{HostAddress}}/api/Auth/login
+Content-Type: application/json
+
+{
+  "username": "testuser",
+  "password": "TestPassword123!"
+}
+
+### Paste the value from step 1's response here before running anything below
+
+### 2. Refresh — happy path. Should return 200 with a NEW access token
+### AND a new refresh token. Copy the new refresh token into
+### @savedRefreshToken again before running test 3 or 4.
+POST {{HostAddress}}/api/Auth/refresh
+Content-Type: application/json
+
+{
+  "refreshToken": "{{savedRefreshToken}}"
+}
+
+### 3. Reuse detection — run test 2 ONCE (so the token above gets rotated
+### and revoked), then immediately run this SAME request again with the
+### SAME now-stale @savedRefreshToken value (don't update it first).
+### Expect: 401. This is the token showing up a second time after rotation.
+POST {{HostAddress}}/api/Auth/refresh
+Content-Type: application/json
+
+{
+  "refreshToken": "{{savedRefreshToken}}"
+}
+
+### 4. Garbage token — never issued, shouldn't hash-match anything.
+### Expect: 401 Invalid refresh token.
+POST {{HostAddress}}/api/Auth/refresh
+Content-Type: application/json
+
+{
+  "refreshToken": "this-was-never-a-real-token-12345"
+}
+
+### 5. Empty token — should get caught by [Required] on RefreshRequestDto,
+### never even reach the service. Expect: 400 Bad Request.
+POST {{HostAddress}}/api/Auth/refresh
+Content-Type: application/json
+
+{
+  "refreshToken": ""
+}
+
+### === LOGOUT FLOW ===
+
+### 6. Login again fresh, to get a token pair not already burned by the
+### tests above. Update @savedRefreshToken from this response before
+### continuing to test 7.
+POST {{HostAddress}}/api/Auth/login
+Content-Type: application/json
+
+{
+  "username": "testuser",
+  "password": "TestPassword123!"
+}
+
+### 7. Logout — requires a valid ACCESS token in Authorization header
+### (this is [Authorize]), body carries the refresh token to revoke.
+### Update {{Token}} at the top of the file with the access token from
+### test 6 if it's expired. Expect: 204 No Content.
+POST {{HostAddress}}/api/Auth/logout
+Authorization: {{Token}}
+Content-Type: application/json
+
+{
+  "refreshToken": "{{savedRefreshToken}}"
+}
+
+### 8. Try to refresh with the token you just logged out with.
+### Expect: 401 — it's now revoked, same as an expired/garbage token
+### from the service's point of view.
+POST {{HostAddress}}/api/Auth/refresh
+Content-Type: application/json
+
+{
+  "refreshToken": "{{savedRefreshToken}}"
 }

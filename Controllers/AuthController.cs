@@ -1,4 +1,5 @@
 using Microsoft.AspNetCore.Mvc;
+using Microsoft.AspNetCore.Authorization;
 
 namespace ProductCatalogApi;
 
@@ -27,6 +28,35 @@ public class AuthController : ControllerBase
     public async Task<ActionResult<LoginResponseDto>> Login(LoginRequestDto request)
     {
         var result = await _userService.LoginAsync(request);
+        if (!result.IsSuccess)
+            return this.ToActionResult(result);
+
+        return Ok(result.Value);
+    }
+
+    [HttpPost("refresh")]
+    public async Task<ActionResult<LoginResponseDto>> Refresh(RefreshRequestDto request)
+    {
+        var result = await _userService.RefreshAsync(request.RefreshToken);
+        if (!result.IsSuccess)
+            return this.ToActionResult(result);
+
+        return Ok(result.Value);
+    }
+
+    [HttpPost("logout")]
+    [Authorize]
+    public async Task<IActionResult> Logout(RefreshRequestDto request)
+    {
+        await _userService.LogoutAsync(request.RefreshToken);
+        return NoContent();
+    }
+
+    [HttpPut("user")]
+    [Authorize(Roles = "Admin")]
+    public async Task<ActionResult<UserResponseDto>> UpdateUser(UserUpdateDto request)
+    {
+        var result = await _userService.UserUpdate(request);
         if (!result.IsSuccess)
             return this.ToActionResult(result);
 

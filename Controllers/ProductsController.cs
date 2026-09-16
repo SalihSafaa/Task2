@@ -55,7 +55,7 @@ public class ProductsController : ControllerBase
     }
 
     [HttpDelete("{id:int}")]
-    [Authorize]
+    [Authorize(Roles = "Admin")]
     public async Task<IActionResult> DeleteProduct(int id)
     {
         var result = await _service.DeleteProductAsync(id);
