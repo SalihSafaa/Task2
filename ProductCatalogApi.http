@@ -1,6 +1,6 @@
 @HostAddress = http://localhost:5206
-@Token=Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJodHRwOi8vc2NoZW1hcy54bWxzb2FwLm9yZy93cy8yMDA1LzA1L2lkZW50aXR5L2NsYWltcy9uYW1laWRlbnRpZmllciI6IjEiLCJodHRwOi8vc2NoZW1hcy54bWxzb2FwLm9yZy93cy8yMDA1LzA1L2lkZW50aXR5L2NsYWltcy9uYW1lIjoidGVzdHVzZXIiLCJodHRwOi8vc2NoZW1hcy5taWNyb3NvZnQuY29tL3dzLzIwMDgvMDYvaWRlbnRpdHkvY2xhaW1zL3JvbGUiOiJBZG1pbiIsImV4cCI6MTc4OTU2Mzg4MiwiaXNzIjoiUHJvZHVjdENhdGFsb2dBcGkiLCJhdWQiOiJQcm9kdWN0Q2F0YWxvZ0FwaSJ9.-K-221mfyKz_Hf6S884gRL5_cCP4WKbc5FzMDmfcpn4
-@savedRefreshToken =3jANlY8HHAlelT/7l4uHxdDsi1gNM//ekTr8syTxrAWdgMHp9UI3fHfGxpuDu8r7esao5BwZT88xeFNX9eackA==
+@Token=Bearer {{login.response.body.$.accessToken}}
+@savedRefreshToken ={{login.response.body.$.refreshToken}}
 ### /api/products?pageNumber=1&pageSize=100&search=&categoryId=&minPrice=  ###
 GET {{HostAddress}}/api/Products?pageNumber=2&pageSize=10
 ###
@@ -86,7 +86,7 @@ Content-Type: application/json
 }
 
 
-
+# @name login
 ### Login Admin ###
 POST {{HostAddress}}/api/Auth/login
 Content-Type: application/json
@@ -111,6 +111,7 @@ Content-Type: application/json
 ### 1. Login — capture the refresh token from the response
 ### After running this, copy the "refreshToken" value from the response
 ### into @savedRefreshToken below
+# @name login
 POST {{HostAddress}}/api/Auth/login
 Content-Type: application/json
 
@@ -124,6 +125,7 @@ Content-Type: application/json
 ### 2. Refresh — happy path. Should return 200 with a NEW access token
 ### AND a new refresh token. Copy the new refresh token into
 ### @savedRefreshToken again before running test 3 or 4.
+# @name login
 POST {{HostAddress}}/api/Auth/refresh
 Content-Type: application/json
 

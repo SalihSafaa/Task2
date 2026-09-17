@@ -218,4 +218,95 @@ public class ProductsServiceTests
         Assert.True(result.IsSuccess);
         Assert.Equal(2, context.Products.Count());
     }
+
+    [Fact]
+    public async Task GetProductsAsync_Page2_ReturnsCorrectSlice()
+    {
+        // 5 products, page size 2 -> page 2 should be items 3 and 4
+        // (ordered by Id), with TotalCount still reflecting all 5.
+        // This is the test the old "ReturnsAllProducts" test didn't
+        // actually cover: it only checked the raw row count, which
+        // would still pass even if Skip/Take were broken.
+        var options = new DbContextOptionsBuilder<AppDbContext>()
+            .UseInMemoryDatabase(Guid.NewGuid().ToString())
+            .Options;
+
+        await using var context = new AppDbContext(options);
+        var service = new ProductsService(context, NullLogger<ProductsService>.Instance);
+        context.Categories.Add(new Category { Id = 1, Name = "Electronics" });
+        for (var i = 1; i <= 5; i++)
+        {
+            context.Products.Add(new Product
+            {
+                Id = i,
+                Name = $"Product {i}",
+                Price = 100m * i,
+                Stock = i,
+                CategoryId = 1
+            });
+        }
+        await context.SaveChangesAsync();
+
+        var query = new PaginationRequestDto { PageNumber = 2, PageSize = 2 };
+        var result = await service.GetProductsAsync(query);
+
+        Assert.True(result.IsSuccess);
+        Assert.Equal(5, result.Value!.TotalCount);
+        Assert.Equal(2, result.Value.Items.Count());
+        Assert.Equal(new[] { "Product 3", "Product 4" }, result.Value.Items.Select(p => p.Name));
+    }
+
+    [Fact]
+    public async Task GetProductsAsync_LastPage_ReturnsRemainderOnly()
+    {
+        var options = new DbContextOptionsBuilder<AppDbContext>()
+            .UseInMemoryDatabase(Guid.NewGuid().ToString())
+            .Options;
+
+        await using var context = new AppDbContext(options);
+        var service = new ProductsService(context, NullLogger<ProductsService>.Instance);
+        context.Categories.Add(new Category { Id = 1, Name = "Electronics" });
+        for (var i = 1; i <= 5; i++)
+        {
+            context.Products.Add(new Product
+            {
+                Id = i,
+                Name = $"Product {i}",
+                Price = 100m * i,
+                Stock = i,
+                CategoryId = 1
+            });
+        }
+        await context.SaveChangesAsync();
+
+        var query = new PaginationRequestDto { PageNumber = 3, PageSize = 2 };
+        var result = await service.GetProductsAsync(query);
+
+        Assert.True(result.IsSuccess);
+        Assert.Single(result.Value!.Items);
+        Assert.Equal("Product 5", result.Value.Items.Single().Name);
+    }
+
+    [Fact]
+    public async Task GetProductsAsync_FilterByCategory_ReturnsOnlyMatchingProducts()
+    {
+        var options = new DbContextOptionsBuilder<AppDbContext>()
+            .UseInMemoryDatabase(Guid.NewGuid().ToString())
+            .Options;
+
+        await using var context = new AppDbContext(options);
+        var service = new ProductsService(context, NullLogger<ProductsService>.Instance);
+        context.Categories.Add(new Category { Id = 1, Name = "Electronics" });
+        context.Categories.Add(new Category { Id = 2, Name = "Books" });
+        context.Products.Add(new Product { Id = 1, Name = "Laptop", Price = 999.99m, Stock = 5, CategoryId = 1 });
+        context.Products.Add(new Product { Id = 2, Name = "Novel", Price = 12.99m, Stock = 20, CategoryId = 2 });
+        await context.SaveChangesAsync();
+
+        var query = new PaginationRequestDto { CategoryId = 2 };
+        var result = await service.GetProductsAsync(query);
+
+        Assert.True(result.IsSuccess);
+        Assert.Equal(1, result.Value!.TotalCount);
+        Assert.Equal("Novel", result.Value.Items.Single().Name);
+    }
 }

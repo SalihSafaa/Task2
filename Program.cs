@@ -76,3 +76,7 @@ app.UseAuthorization();
 app.MapControllers();
 
 app.Run();
+
+// Makes the implicit top-level Program class visible to the test project,
+// so WebApplicationFactory<Program> can find it.
+public partial class Program { }

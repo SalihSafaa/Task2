@@ -28,6 +28,7 @@ public class ProductsService : IProductsService
 
         var totalCount = await products.CountAsync();
         var items = await products
+            .OrderBy(p => p.Id)
             .Skip((query.PageNumber - 1) * query.PageSize)
             .Take(query.PageSize)
             .Select(p => p.ToDto())
