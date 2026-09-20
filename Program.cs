@@ -53,10 +53,35 @@ builder.Services.AddDbContext<AppDbContext>(options =>
     options.UseSqlServer(builder.Configuration.GetConnectionString("DefaultConnection")));
 
 builder.Services.AddEndpointsApiExplorer();
-builder.Services.AddSwaggerGen();
+builder.Services.AddSwaggerGen(options =>
+{
+    options.AddSecurityDefinition("Bearer", new Microsoft.OpenApi.OpenApiSecurityScheme
+    {
+        Name = "Authorization",
+        Type = Microsoft.OpenApi.SecuritySchemeType.Http,
+        Scheme = "bearer",
+        BearerFormat = "JWT",
+        In = Microsoft.OpenApi.ParameterLocation.Header,
+        Description = "Enter a valid JWT token."
+    });
 
+    options.AddSecurityRequirement(document => new Microsoft.OpenApi.OpenApiSecurityRequirement
+    {
+        {
+            new Microsoft.OpenApi.OpenApiSecuritySchemeReference("Bearer", document),
+            new List<string>()
+        }
+    });
+});
 
 var app = builder.Build();
+
+using (var scope = app.Services.CreateScope())
+{
+    scope.ServiceProvider.GetRequiredService<AppDbContext>().Database.Migrate();
+}
+
+await AdminSeeder.SeedAdminAsync(app.Services);
 
 app.UseExceptionHandler(_ => { });
 
@@ -65,7 +90,6 @@ if (app.Environment.IsDevelopment())
     app.UseSwagger();
     app.UseSwaggerUI(c =>
     {
-        // Sets the Swagger UI at the application's root URL (optional, but convenient)
         c.SwaggerEndpoint("/swagger/v1/swagger.json", "Product Catalog API v1");
     });
 }
@@ -77,6 +101,4 @@ app.MapControllers();
 
 app.Run();
 
-// Makes the implicit top-level Program class visible to the test project,
-// so WebApplicationFactory<Program> can find it.
 public partial class Program { }

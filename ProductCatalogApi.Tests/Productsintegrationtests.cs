@@ -8,13 +8,6 @@ using Xunit;
 
 namespace ProductCatalogApi.Tests;
 
-// IClassFixture<CustomWebApplicationFactory> shares ONE factory (one
-// InMemory database) across every test in this class. That's fine and
-// fast when tests don't step on each other's data — which is why each
-// test below creates its own unique category/user rather than assuming
-// what's in the database. If two tests ever need conflicting state,
-// that's the signal to split them into a class that makes a fresh
-// factory per test instead.
 public class ProductsIntegrationTests : IClassFixture<CustomWebApplicationFactory>
 {
     private readonly CustomWebApplicationFactory _factory;
@@ -29,7 +22,6 @@ public class ProductsIntegrationTests : IClassFixture<CustomWebApplicationFactor
     [Fact]
     public async Task GetProducts_Anonymous_ReturnsOk()
     {
-        // GET is meant to be public — no Authorization header at all.
         var response = await _client.GetAsync("/api/products");
 
         response.EnsureSuccessStatusCode();
@@ -49,10 +41,6 @@ public class ProductsIntegrationTests : IClassFixture<CustomWebApplicationFactor
 
         var response = await _client.PostAsJsonAsync("/api/products", payload);
 
-        // This is the one assertion your unit tests structurally cannot
-        // make: ProductsService.CreateProductAsync has no idea [Authorize]
-        // exists. Only a real HTTP round-trip through the real pipeline
-        // proves the attribute is actually there and actually enforced.
         Assert.Equal(HttpStatusCode.Unauthorized, response.StatusCode);
     }
 
@@ -121,22 +109,12 @@ public class ProductsIntegrationTests : IClassFixture<CustomWebApplicationFactor
 
         var response = await _client.DeleteAsync($"/api/products/{productId}");
 
-        // Authenticated (we know who they are) but not authorized
-        // (they're not an Admin) -> 403, not 401. This is the 401-vs-403
-        // distinction from Day 7, proven end to end.
         Assert.Equal(HttpStatusCode.Forbidden, response.StatusCode);
     }
 
     [Fact]
     public async Task DeleteProduct_AsAdmin_Succeeds()
     {
-        // There's no API route that grants Admin — UserUpdate itself
-        // requires [Authorize(Roles = "Admin")], so you can't become an
-        // Admin by calling the API (nothing can, on a fresh database).
-        // That's a real gap worth fixing eventually (how does the very
-        // first Admin get created?), but for the test itself the fix is
-        // simple: reach into the test database directly through DI and
-        // seed the role, the same way you'd seed any other fixture data.
         var username = $"admin_{Guid.NewGuid():N}";
         await RegisterAsync(username, "TestPassword123!");
         await PromoteToAdminAsync(username);
@@ -152,9 +130,6 @@ public class ProductsIntegrationTests : IClassFixture<CustomWebApplicationFactor
 
         Assert.Equal(HttpStatusCode.NoContent, response.StatusCode);
     }
-
-    // ---- helpers: real HTTP calls for what the API supports,
-    // ---- direct DB access only for what it doesn't (yet) ----
 
     private async Task RegisterAsync(string username, string password)
     {

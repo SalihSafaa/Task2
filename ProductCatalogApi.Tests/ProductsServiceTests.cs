@@ -222,11 +222,6 @@ public class ProductsServiceTests
     [Fact]
     public async Task GetProductsAsync_Page2_ReturnsCorrectSlice()
     {
-        // 5 products, page size 2 -> page 2 should be items 3 and 4
-        // (ordered by Id), with TotalCount still reflecting all 5.
-        // This is the test the old "ReturnsAllProducts" test didn't
-        // actually cover: it only checked the raw row count, which
-        // would still pass even if Skip/Take were broken.
         var options = new DbContextOptionsBuilder<AppDbContext>()
             .UseInMemoryDatabase(Guid.NewGuid().ToString())
             .Options;
