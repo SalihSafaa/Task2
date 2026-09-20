@@ -4,6 +4,8 @@ A .NET 10 Web API for managing a product catalog with categories, authentication
 
 ## Overview
 
+
+
 This project is a backend service for a catalog system where users can:
 
 - register and log in
