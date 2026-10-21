@@ -29,6 +29,21 @@ public class ProductsIntegrationTests : IClassFixture<CustomWebApplicationFactor
     }
 
     [Fact]
+    public async Task Register_WithUsernameExceedingLimit_ReturnsValidationProblem()
+    {
+        var response = await _client.PostAsJsonAsync("/api/auth/register", new
+        {
+            username = new string('u', 51),
+            password = "ValidPassword123!"
+        });
+
+        Assert.Equal(HttpStatusCode.BadRequest, response.StatusCode);
+        var responseBody = await response.Content.ReadAsStringAsync();
+        Assert.Contains("Username", responseBody);
+        Assert.Contains("50 characters", responseBody);
+    }
+
+    [Fact]
     public async Task CreateProduct_WithoutToken_ReturnsUnauthorized()
     {
         var payload = new
