@@ -7,6 +7,10 @@ public class CategoryDto//showing category to the user
     public int Id { get; set; }
     public string Name { get; set; } = string.Empty;
     public string Description { get; set; } = string.Empty;
+    public DateTime CreatedAt { get; set; }
+    public DateTime LastUpdate { get; set; }
+    public string? CreatedBy { get; set; }
+    public string? LastUpdatedBy { get; set; }
 }
 public class CreateCategoryDto //validating data from user
 {

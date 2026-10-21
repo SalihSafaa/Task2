@@ -237,7 +237,3 @@ The test suite covers:
 - The project uses EF Core migrations and runs them automatically on startup.
 - `AdminSeeder` ensures that a default admin is created if configuration is present and no admin exists.
 - The included `ProductCatalogApi.http` file can be used to test endpoints directly in Visual Studio Code or VS.
-
-## License
-
-This project is intended for learning and internal task use unless otherwise specified by the owner.

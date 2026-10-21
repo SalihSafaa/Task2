@@ -9,6 +9,9 @@ public class ProductDto //showing product to the user
     public decimal Price { get; set; }
     public int Stock { get; set; }
     public DateTime CreatedAt { get; set; }
+    public DateTime LastUpdate { get; set; }
+    public string? CreatedBy { get; set; }
+    public string? LastUpdatedBy { get; set; }
     public int CategoryId { get; set; }
 }
 public class CreateProductDto //validating data from user

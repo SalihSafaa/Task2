@@ -49,6 +49,7 @@ builder.Services.AddScoped<IPasswordHasher, Argon2PasswordHasher>();
 builder.Services.AddScoped<IUserService, UserService>();
 builder.Services.AddScoped<IRefreshTokenService, RefreshTokenService>();
 builder.Services.AddControllers();
+builder.Services.AddHttpContextAccessor();
 builder.Services.AddDbContext<AppDbContext>(options =>
     options.UseSqlServer(builder.Configuration.GetConnectionString("DefaultConnection")));
 
@@ -78,7 +79,15 @@ var app = builder.Build();
 
 using (var scope = app.Services.CreateScope())
 {
-    scope.ServiceProvider.GetRequiredService<AppDbContext>().Database.Migrate();
+    var database = scope.ServiceProvider.GetRequiredService<AppDbContext>().Database;
+    if (database.IsRelational())
+    {
+        database.Migrate();
+    }
+    else
+    {
+        database.EnsureCreated();
+    }
 }
 
 await AdminSeeder.SeedAdminAsync(app.Services);

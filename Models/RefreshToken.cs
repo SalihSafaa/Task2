@@ -1,6 +1,6 @@
 namespace ProductCatalogApi;
 
-public class RefreshToken
+public class RefreshToken : AuditableEntity
 {
     public int Id { get; set; }
     public string TokenHash { get; set; } = string.Empty;

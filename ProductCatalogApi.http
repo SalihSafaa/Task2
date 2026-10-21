@@ -1,8 +1,8 @@
-@HostAddress = http://localhost:5206
+@HostAddress = http://localhost:8080
 @Token=Bearer {{login.response.body.$.accessToken}}
 @savedRefreshToken ={{login.response.body.$.refreshToken}}
 ### /api/products?pageNumber=1&pageSize=100&search=&categoryId=&minPrice=  ###
-GET {{HostAddress}}/api/Products?pageNumber=2&pageSize=10
+GET {{HostAddress}}/api/Products?pageNumber=1&pageSize=10
 ###
 GET  {{HostAddress}}/api/Products
 

@@ -122,6 +122,10 @@ public class UserService : IUserService
     {
         Id = user.Id,
         Username = user.Username,
-        Role = user.Role
+        Role = user.Role,
+        CreatedAt = user.CreatedAt,
+        LastUpdate = user.LastUpdate,
+        CreatedBy = user.CreatedBy,
+        LastUpdatedBy = user.LastUpdatedBy
     };
 }
