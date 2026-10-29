@@ -17,6 +17,8 @@ public class AppDbContext : DbContext
     public DbSet<Category> Categories { get; set; }
     public DbSet<User> Users { get; set; }
     public DbSet<RefreshToken> RefreshTokens { get; set; }
+    public DbSet<StockMovement> StockMovements { get; set; }
+
     protected override void OnModelCreating(ModelBuilder modelBuilder)
     {
         base.OnModelCreating(modelBuilder);
@@ -53,6 +55,17 @@ public class AppDbContext : DbContext
         modelBuilder.Entity<User>().HasIndex(user => user.Username).IsUnique();
         modelBuilder.Entity<RefreshToken>().HasOne(rt => rt.User).WithMany()
         .HasForeignKey(rt => rt.UserId).OnDelete(DeleteBehavior.Cascade);
+
+        modelBuilder.Entity<StockMovement>(entity =>
+        {
+            entity.Property(m => m.Reason).HasMaxLength(200);
+            entity.Property(m => m.CreatedBy).HasMaxLength(100);
+            entity.HasOne(m => m.Product)
+            .WithMany()
+            .HasForeignKey(m => m.ProductId)
+            .OnDelete(DeleteBehavior.Cascade);
+            entity.HasIndex(m => m.ProductId);
+        });
     }
 
     public override int SaveChanges()
