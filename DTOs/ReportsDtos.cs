@@ -11,7 +11,6 @@ public class OutOfStockProductDto
     public string Name { get; set; } = string.Empty;
     public int CategoryId { get; set; }
 }
-
 public class CategoryStatsDto
 {
     public int CategoryId { get; set; }

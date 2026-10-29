@@ -11,6 +11,9 @@ public static class MappingExtentions
             Price = product.Price,
             Stock = product.Stock,
             CreatedAt = product.CreatedAt,
+            LastUpdate = product.LastUpdate,
+            CreatedBy = product.CreatedBy,
+            LastUpdatedBy = product.LastUpdatedBy,
             CategoryId = product.CategoryId
         };
     }
@@ -20,7 +23,11 @@ public static class MappingExtentions
         {
             Id = category.Id,
             Name = category.Name,
-            Description = category.Description ?? string.Empty
+            Description = category.Description ?? string.Empty,
+            CreatedAt = category.CreatedAt,
+            LastUpdate = category.LastUpdate,
+            CreatedBy = category.CreatedBy,
+            LastUpdatedBy = category.LastUpdatedBy
         };
     }
     public static Product ToEntity(this CreateProductDto createProductDto)

@@ -1,96 +1,72 @@
-namespace ProductCatalogApi;
-
+using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
-using Microsoft.EntityFrameworkCore;
+
+namespace ProductCatalogApi;
 
 [ApiController]
 [Route("api/[controller]")]
 public class CategoriesController : ControllerBase
 {
-    private readonly AppDbContext _context;
-    private readonly ILogger<CategoriesController> _logger;
+    private readonly ICategoriesService _service;
 
-    public CategoriesController(AppDbContext context, ILogger<CategoriesController> logger)
+    public CategoriesController(ICategoriesService service)
     {
-        _context = context;
-        _logger = logger;
+        _service = service;
     }
 
     [HttpGet]
     public async Task<ActionResult<IEnumerable<CategoryDto>>> GetCategories()
     {
-        return await _context.Categories.Select(c => c.ToDto()).ToListAsync();
+        var result = await _service.GetCategoriesAsync();
+        if (!result.IsSuccess)
+            return this.ToActionResult(result);
+        return Ok(result.Value);
     }
     [HttpGet("{id:int}")]
     public async Task<ActionResult<CategoryDto>> GetCategory(int id)
     {
-        var category = await _context.Categories.FindAsync(id);
+        var result = await _service.GetCategoryAsync(id);
+        if (!result.IsSuccess)
+            return this.ToActionResult(result);
 
-        if (category == null)
-        {
-            return NotFound();
-        }
-
-        return category.ToDto();
+        return Ok(result.Value);
     }
     [HttpGet("{id:int}/products")]
     public async Task<ActionResult<IEnumerable<ProductDto>>> GetProductsByCategory(int id)
     {
-        var categoryExists = await _context.Categories.AnyAsync(c => c.Id == id);
-        if (!categoryExists)
-        {
-            return NotFound();
-        }
+        var result = await _service.GetProductsByCategoryAsync(id);
+        if (!result.IsSuccess)
+            return this.ToActionResult(result);
 
-        return await _context.Products.Where(p => p.CategoryId == id).Select(p => p.ToDto()).ToListAsync();
+        return Ok(result.Value);
     }
     [HttpPost]
+    [Authorize]
     public async Task<ActionResult<CategoryDto>> CreateCategory(CreateCategoryDto createCategoryDto)
     {
-        var category = createCategoryDto.ToEntity();
-        _context.Categories.Add(category);
-        await _context.SaveChangesAsync();
-
-        _logger.LogInformation("Category created with ID: {CategoryId}", category.Id);
-        return CreatedAtAction(nameof(GetCategory), new { id = category.Id }, category.ToDto());
+        var result = await _service.CreateCategoryAsync(createCategoryDto);
+        if (!result.IsSuccess)
+            return this.ToActionResult(result);
+        return CreatedAtAction(nameof(GetCategory), new { id = result.Value!.Id }, result.Value);
     }
     [HttpPut("{id:int}")]
+    [Authorize]
     public async Task<IActionResult> UpdateCategory(int id, UpdateCategoryDto updateCategoryDto)
     {
-        var category = await _context.Categories.FindAsync(id);
-        if (category == null)
-        {
-            _logger.LogWarning("Attempted to update a non-existent category with ID: {CategoryId}", id);
-            return NotFound();
-        }
-        _context.Entry(category).State = EntityState.Modified;
+        var result = await _service.UpdateCategoryAsync(id, updateCategoryDto);
+        if (!result.IsSuccess)
+            return this.ToActionResult(result);
 
-        updateCategoryDto.UpdateEntity(category);
-
-        await _context.SaveChangesAsync();
-        _logger.LogInformation("Category with ID: {CategoryId} updated successfully", id);
         return NoContent();
     }
 
     [HttpDelete("{id:int}")]
+    [Authorize(Roles = "Admin")]
     public async Task<IActionResult> DeleteCategory(int id)
     {
-        var category = await _context.Categories.FindAsync(id);
-        if (category == null)
-        {
-            _logger.LogWarning("Attempted to delete a non-existent category with ID: {CategoryId}", id);
-            return NotFound();
-        }
-
-        _context.Categories.Remove(category);
-        await _context.SaveChangesAsync();
-
-        _logger.LogInformation("Category with ID: {CategoryId} deleted successfully", id);
+        var result = await _service.DeleteCategoryAsync(id);
+        if (!result.IsSuccess)
+            return this.ToActionResult(result);
         return NoContent();
-    }
-
-    private bool CategoryExists(int id)
-    {
-        return _context.Categories.Any(e => e.Id == id);
     }
 }
