@@ -31,7 +31,7 @@ public static class AdminSeeder
 
 
         var usernameTaken = await context.Users
-            .AnyAsync(u => u.Username.ToUpper() == seedUsername.ToUpper());
+            .AnyAsync(u => u.Username == seedUsername); //replaced with collation
 
         if (usernameTaken)
         {

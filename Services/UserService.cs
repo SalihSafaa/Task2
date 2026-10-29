@@ -28,7 +28,7 @@ public class UserService : IUserService
     {
         var username = request.Username.Trim();
         var usernameExists = await _context.Users
-            .AnyAsync(user => user.Username.ToUpper() == username.ToUpper());
+            .AnyAsync(user => user.Username == username); //removed the toupper replaced with collation in db
 
         if (usernameExists)
         {
@@ -54,7 +54,7 @@ public class UserService : IUserService
     {
         var username = request.Username.Trim();
         var user = await _context.Users
-            .SingleOrDefaultAsync(candidate => candidate.Username.ToUpper() == username.ToUpper());
+            .SingleOrDefaultAsync(candidate => candidate.Username == username);//replaced with collation
 
         if (user is null || !_passwordHasher.Verify(request.Password, user.PasswordHash))
         {
