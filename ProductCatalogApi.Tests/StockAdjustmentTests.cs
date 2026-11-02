@@ -94,8 +94,11 @@ public class StockAdjustmentTests : IClassFixture<SqlServerWebApplicationFactory
         gate.SetResult();
         var statuses = await Task.WhenAll(tasks);
 
+        var stats = await GetMovementStatsAsync(productId);
         var summary = string.Join(", ",
-            statuses.GroupBy(s => s).Select(g => $"{(int)g.Key} x{g.Count()}"));
+            statuses.GroupBy(s => s).Select(g => $"{(int)g.Key} x{g.Count()}"))
+            + $" | finalStock={await GetStockAsync(productId)}, movements={await CountMovementsAsync(productId)}"
+            + $", sumDelta={stats.SumDelta}, distinctStockAfter={stats.DistinctStockAfter}";
 
         Assert.True(statuses.Count(s => s == HttpStatusCode.OK) == 10, $"Statuses: {summary}");
         Assert.True(statuses.Count(s => s == HttpStatusCode.Conflict) == 10, $"Statuses: {summary}");
@@ -104,6 +107,14 @@ public class StockAdjustmentTests : IClassFixture<SqlServerWebApplicationFactory
     }
     // ---------- helpers ----------
 
+    private async Task<(int SumDelta, int DistinctStockAfter)> GetMovementStatsAsync(int productId)
+    {
+        using var scope = _factory.Services.CreateScope();
+        var context = scope.ServiceProvider.GetRequiredService<AppDbContext>();
+        var movements = await context.StockMovements.AsNoTracking()
+            .Where(m => m.ProductId == productId).ToListAsync();
+        return (movements.Sum(m => m.Delta), movements.Select(m => m.StockAfter).Distinct().Count());
+    }
     private async Task AuthenticateAsync()
     {
         var username = $"user_{Guid.NewGuid():N}";

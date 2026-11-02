@@ -237,3 +237,40 @@ The test suite covers:
 - The project uses EF Core migrations and runs them automatically on startup.
 - `AdminSeeder` ensures that a default admin is created if configuration is present and no admin exists.
 - The included `ProductCatalogApi.http` file can be used to test endpoints directly in Visual Studio Code or VS.
+
+## Concurrency experiments (usp_AdjustStock)
+
+Test: a product with stock 10, 20 parallel requests of delta -1.
+Expected: exactly 10 x 200, 10 x 409, final stock 0, 10 StockMovements rows.
+
+### With `UPDLOCK, ROWLOCK` (the final version)
+Passed 5 out of 5 runs: 10 x 200, 10 x 409, final stock 0, 10 movement rows.
+Why: the first request locks the row; the others wait at the SELECT. Each
+one then reads the already-updated stock, so the 11th request sees 0 and is refused.
+
+### Without `UPDLOCK` (lost update)
+Result: `200 x19, 409 x1`, final stock 0, 19 movement rows, sumDelta = -19,
+but only 10 distinct StockAfter values.
+Why: a plain SELECT releases its shared lock immediately, so many requests read
+the same stock, passed the check, and wrote back a stale result. 19 sales were
+accepted for 10 items. The stock and the audit trail disagree, and nothing
+raised an error. (Another run gave `200 x16, 409 x4`; the final stock is
+luck, it is just what the last writer read.)
+
+### With `HOLDLOCK` instead of `UPDLOCK` (deadlock)
+Result: `200 x5, 500 x15`, final stock 5, 5 movement rows (the books balanced).
+The log confirmed the 500s: "Transaction ... was deadlocked ... chosen as the
+deadlock victim" (error 1205).
+Why: HOLDLOCK keeps a shared lock until the transaction ends. Several requests
+held shared locks on the same row, then all tried to upgrade to an exclusive
+lock for the UPDATE. Each waited for the others to release, so SQL Server
+killed one transaction per deadlock. UPDLOCK avoids this because update locks
+do not share with each other: the second request waits before it holds anything.
+
+### Takeaway
+UPDLOCK is correct. No hint loses data silently; HOLDLOCK fails loudly but keeps the data correct.
+
+### Testing note
+Unit tests use InMemory; integration tests run against real SQL Server through
+Testcontainers (Docker required), because InMemory has no locks, no stored
+procedures, and compares strings case-sensitively.
