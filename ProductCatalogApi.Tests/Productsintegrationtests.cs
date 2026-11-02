@@ -8,12 +8,12 @@ using Xunit;
 
 namespace ProductCatalogApi.Tests;
 
-public class ProductsIntegrationTests : IClassFixture<CustomWebApplicationFactory>
+public class ProductsIntegrationTests : IClassFixture<SqlServerWebApplicationFactory>
 {
-    private readonly CustomWebApplicationFactory _factory;
+    private readonly SqlServerWebApplicationFactory _factory;
     private readonly HttpClient _client;
 
-    public ProductsIntegrationTests(CustomWebApplicationFactory factory)
+    public ProductsIntegrationTests(SqlServerWebApplicationFactory factory)
     {
         _factory = factory;
         _client = factory.CreateClient();
