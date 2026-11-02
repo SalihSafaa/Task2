@@ -72,6 +72,36 @@ public class StockAdjustmentTests : IClassFixture<SqlServerWebApplicationFactory
 
         Assert.Equal(HttpStatusCode.Conflict, second.StatusCode);
     }
+    [Fact]
+    public async Task AdjustStock_20ParallelRequests_ExactlyTenSucceed()
+    {
+        await AuthenticateAsync();
+        var productId = await SeedProductAsync(stock: 10);
+
+        // The gate makes all 20 requests start at the same moment,
+        // instead of one-by-one as each task is created.
+        var gate = new TaskCompletionSource(TaskCreationOptions.RunContinuationsAsynchronously);
+
+        var tasks = Enumerable.Range(0, 20).Select(_ => Task.Run(async () =>
+        {
+            await gate.Task;
+            var response = await _client.PostAsJsonAsync(
+                $"/api/products/{productId}/stock-adjustments",
+                new { delta = -1, reason = "parallel" });
+            return response.StatusCode;
+        })).ToList();
+
+        gate.SetResult();
+        var statuses = await Task.WhenAll(tasks);
+
+        var summary = string.Join(", ",
+            statuses.GroupBy(s => s).Select(g => $"{(int)g.Key} x{g.Count()}"));
+
+        Assert.True(statuses.Count(s => s == HttpStatusCode.OK) == 10, $"Statuses: {summary}");
+        Assert.True(statuses.Count(s => s == HttpStatusCode.Conflict) == 10, $"Statuses: {summary}");
+        Assert.Equal(0, await GetStockAsync(productId));
+        Assert.Equal(10, await CountMovementsAsync(productId));
+    }
     // ---------- helpers ----------
 
     private async Task AuthenticateAsync()
