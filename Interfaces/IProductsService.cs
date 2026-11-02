@@ -7,4 +7,5 @@ public interface IProductsService
     public Task<Result<ProductDto>> CreateProductAsync(CreateProductDto createProductDto);
     public Task<Result<bool>> UpdateProductAsync(int id, UpdateProductDto updateProductDto);
     public Task<Result<bool>> DeleteProductAsync(int id);
+    public Task<Result<StockAdjustmentResultDto>> AdjustStockAsync(int productId, AdjustStockDto dto, string username);
 }

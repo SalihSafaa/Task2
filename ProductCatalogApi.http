@@ -20,7 +20,7 @@ Content-Type: application/json
   "price": 999.99,
   "stock": 25,
   "createdAt": "2026-09-01T10:00:00",
-  "categoryId": 8
+  "categoryId": 1
 }
 
 ### Products - Update
@@ -86,14 +86,15 @@ Content-Type: application/json
 }
 
 
-# @name login
+# 
 ### Login Admin ###
+# @name login
 POST {{HostAddress}}/api/Auth/login
 Content-Type: application/json
 
 {
-  "username": "testuser",
-  "password": "TestPassword123!"
+  "username": "admin",
+  "password": "12345678"
 }
 ### update user
 PUT {{HostAddress}}/api/Auth/user
@@ -195,4 +196,36 @@ Content-Type: application/json
 
 {
   "refreshToken": "{{savedRefreshToken}}"
+}
+
+### === STOCK ADJUSTMENTS ===
+
+### Stock adjustment - success (expect 200 and a newStock value)
+POST {{HostAddress}}/api/Products/1003/stock-adjustments
+Authorization: {{Token}}
+Content-Type: application/json
+
+{
+  "delta": -1,
+  "reason": "Sold in store"
+}
+
+### Stock adjustment - too much (expect 409 Conflict)
+POST {{HostAddress}}/api/Products/1003/stock-adjustments
+Authorization: {{Token}}
+Content-Type: application/json
+
+{
+  "delta": -999,
+  "reason": "Should be rejected"
+}
+
+### Stock adjustment - missing product (expect 404)
+POST {{HostAddress}}/api/Products/99999/stock-adjustments
+Authorization: {{Token}}
+Content-Type: application/json
+
+{
+  "delta": -1,
+  "reason": "No such product"
 }

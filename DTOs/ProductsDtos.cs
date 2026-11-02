@@ -44,3 +44,23 @@ public class UpdateProductDto //validating data from user
     [Range(1, int.MaxValue, ErrorMessage = "Category ID must be a valid positive number.")]
     public int CategoryId { get; set; }
 }
+//the adjust products
+public class AdjustStockDto //validating data from user
+{
+    [Range(-1000, 1000, ErrorMessage = "Delta is out of range.")]
+    [CustomValidation(typeof(AdjustStockDto), nameof(ValidateDelta))]
+    public int Delta { get; set; }
+
+    [Required(ErrorMessage = "Reason is required.")]
+    [MaxLength(200, ErrorMessage = "Reason cannot exceed 200 characters.")]
+    public string Reason { get; set; } = string.Empty;
+
+    public static ValidationResult? ValidateDelta(int delta, ValidationContext _) =>
+        delta == 0 ? new ValidationResult("Delta cannot be zero.") : ValidationResult.Success;
+}
+
+public class StockAdjustmentResultDto //what we return
+{
+    public int ProductId { get; set; }
+    public int NewStock { get; set; }
+}

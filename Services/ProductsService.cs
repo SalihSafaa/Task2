@@ -1,5 +1,6 @@
 using Microsoft.EntityFrameworkCore;
-
+using System.Data;
+using Microsoft.Data.SqlClient;
 namespace ProductCatalogApi;
 
 public class ProductsService : IProductsService
@@ -109,4 +110,33 @@ public class ProductsService : IProductsService
         _logger.LogInformation("Product with ID: {ProductId} deleted successfully", id);
         return Result<bool>.Success(true);
     }
+public async Task<Result<StockAdjustmentResultDto>> AdjustStockAsync(int productId, AdjustStockDto dto, string username)
+{
+    var newStock = new SqlParameter("@NewStock", SqlDbType.Int) { Direction = ParameterDirection.Output };
+
+    try
+    {
+        await _context.Database.ExecuteSqlRawAsync(
+            "EXEC dbo.usp_AdjustStock @ProductId, @Delta, @Reason, @CreatedBy, @NewStock OUTPUT",
+            new SqlParameter("@ProductId", productId),
+            new SqlParameter("@Delta", dto.Delta),
+            new SqlParameter("@Reason", dto.Reason),
+            new SqlParameter("@CreatedBy", username),
+            newStock);
+    }
+    catch (SqlException ex) when (ex.Number == 50002)
+    {
+        return Result<StockAdjustmentResultDto>.Failure(ErrorType.NotFound, "Product not found.");
+    }
+    catch (SqlException ex) when (ex.Number == 50001)
+    {
+        return Result<StockAdjustmentResultDto>.Failure(ErrorType.Conflict, "Insufficient stock.");
+    }
+
+    return Result<StockAdjustmentResultDto>.Success(new StockAdjustmentResultDto
+    {
+        ProductId = productId,
+        NewStock = (int)newStock.Value
+    });
+}
 }

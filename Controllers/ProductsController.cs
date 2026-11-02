@@ -64,4 +64,15 @@ public class ProductsController : ControllerBase
 
         return NoContent();
     }
+    [HttpPost("{id:int}/stock-adjustments")]
+    [Authorize]
+    public async Task<ActionResult<StockAdjustmentResultDto>> AdjustStock(int id, AdjustStockDto dto)
+    {
+        var username = User.Identity?.Name ?? "unknown";
+        var result = await _service.AdjustStockAsync(id, dto, username);
+        if (!result.IsSuccess)
+            return this.ToActionResult(result);
+
+        return Ok(result.Value);
+    }
 }
