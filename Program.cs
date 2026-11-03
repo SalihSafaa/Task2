@@ -81,11 +81,7 @@ var app = builder.Build();
 using (var scope = app.Services.CreateScope())
 {
     var database = scope.ServiceProvider.GetRequiredService<AppDbContext>().Database;
-    if (database.IsRelational())
-    {
-        database.Migrate();
-    }
-    else
+    if (!database.IsRelational())
     {
         database.EnsureCreated();
     }

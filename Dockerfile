@@ -19,3 +19,17 @@ COPY --from=build /app/publish .
 
 EXPOSE 8080
 ENTRYPOINT ["dotnet", "ProductCatalogApi.dll"]
+
+# Stage 3: build the EF Core migration bundle (one self-contained executable)
+FROM build AS bundle
+RUN --mount=type=cache,target=/root/.nuget/packages \
+    dotnet tool install --global dotnet-ef --version 10.*
+ENV PATH="${PATH}:/root/.dotnet/tools"
+RUN --mount=type=cache,target=/root/.nuget/packages \
+    dotnet ef migrations bundle --project ProductCatalogApi.csproj -o /app/efbundle --force
+
+# Stage 4: tiny image that only runs the bundle
+FROM mcr.microsoft.com/dotnet/aspnet:10.0 AS migrator
+WORKDIR /app
+COPY --from=bundle /app/efbundle .
+ENTRYPOINT ["./efbundle"]

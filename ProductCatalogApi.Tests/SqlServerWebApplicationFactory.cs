@@ -12,7 +12,17 @@ public class SqlServerWebApplicationFactory : WebApplicationFactory<Program>, IA
     private readonly MsSqlContainer _container =
         new MsSqlBuilder("mcr.microsoft.com/mssql/server:2022-latest").Build();
 
-    public Task InitializeAsync() => _container.StartAsync();
+    public async Task InitializeAsync()
+    {
+        await _container.StartAsync();
+
+        var options = new DbContextOptionsBuilder<AppDbContext>()
+            .UseSqlServer(_container.GetConnectionString())
+            .Options;
+
+        await using var context = new AppDbContext(options);
+        await context.Database.MigrateAsync();
+    }
 
     public new async Task DisposeAsync()
     {

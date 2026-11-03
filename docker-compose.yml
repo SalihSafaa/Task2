@@ -15,9 +15,22 @@ services:
       retries: 20
       start_period: 90s
 
+  migrator:
+    build:
+      context: .
+      target: migrator
+    command:
+      - "--connection"
+      - "Server=db;Database=ProductCatalogDb;User Id=sa;Password=${DB_PASSWORD:?DB_PASSWORD is required};TrustServerCertificate=True"
+    depends_on:
+      db:
+        condition: service_healthy
+    restart: "no"
+
   api:
     build:
       context: .
+      target: final
     ports:
       - "8080:8080"
     environment:
@@ -27,8 +40,8 @@ services:
       Seed__AdminUsername: "${ADMIN_SEED_USERNAME:?ADMIN_SEED_USERNAME is required}"
       Seed__AdminPassword: "${ADMIN_SEED_PASSWORD:?ADMIN_SEED_PASSWORD is required}"
     depends_on:
-      db:
-        condition: service_healthy
+      migrator:
+        condition: service_completed_successfully
 
 volumes:
   sql_data:
