@@ -229,3 +229,7 @@ Content-Type: application/json
   "delta": -1,
   "reason": "No such product"
 }
+###
+GET {{HostAddress}}/api/products?categoryId=1&pageNumber=1&pageSize=10
+###
+GET {{HostAddress}}/api/products?search=lap&pageNumber=1&pageSize=10

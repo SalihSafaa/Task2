@@ -21,6 +21,11 @@ public class AppDbContext : DbContext
 
     protected override void OnModelCreating(ModelBuilder modelBuilder)
     {
+        modelBuilder.Entity<Product>()//index
+        .HasIndex(p => p.Price)
+        .IsDescending()
+        .HasDatabaseName("IX_Products_Price");
+
         base.OnModelCreating(modelBuilder);
         modelBuilder.Entity<Category>(entity =>
         {

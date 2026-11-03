@@ -99,6 +99,10 @@ namespace ProductCatalogApi.Migrations
 
                     b.HasIndex("CategoryId");
 
+                    b.HasIndex("Price")
+                        .IsDescending()
+                        .HasDatabaseName("IX_Products_Price");
+
                     b.ToTable("Products");
                 });
 
