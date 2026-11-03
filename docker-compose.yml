@@ -27,6 +27,22 @@ services:
         condition: service_healthy
     restart: "no"
 
+  dbsetup:
+    image: mcr.microsoft.com/mssql/server:2022-latest
+    environment:
+      DB_PASSWORD: "${DB_PASSWORD:?DB_PASSWORD is required}"
+      APP_DB_PASSWORD: "${APP_DB_PASSWORD:?APP_DB_PASSWORD is required}"
+    volumes:
+      - ./db/init-app-login.sql:/init-app-login.sql:ro
+    entrypoint:
+      - /bin/bash
+      - -c
+      - /opt/mssql-tools18/bin/sqlcmd -S db -U sa -P "$$DB_PASSWORD" -C -b -v APP_DB_PASSWORD="$$APP_DB_PASSWORD" -i /init-app-login.sql
+    depends_on:
+      migrator:
+        condition: service_completed_successfully
+    restart: "no"
+
   api:
     build:
       context: .
@@ -35,12 +51,12 @@ services:
       - "8080:8080"
     environment:
       ASPNETCORE_ENVIRONMENT: "${ASPNETCORE_ENVIRONMENT:-Development}"
-      ConnectionStrings__DefaultConnection: "Server=db;Database=ProductCatalogDb;User Id=sa;Password=${DB_PASSWORD:?DB_PASSWORD is required};TrustServerCertificate=True"
+      ConnectionStrings__DefaultConnection: "Server=db;Database=ProductCatalogDb;User Id=catalog_app;Password=${APP_DB_PASSWORD:?APP_DB_PASSWORD is required};TrustServerCertificate=True"
       Jwt__Key: "${JWT_KEY:?JWT_KEY is required}"
       Seed__AdminUsername: "${ADMIN_SEED_USERNAME:?ADMIN_SEED_USERNAME is required}"
       Seed__AdminPassword: "${ADMIN_SEED_PASSWORD:?ADMIN_SEED_PASSWORD is required}"
     depends_on:
-      migrator:
+      dbsetup:
         condition: service_completed_successfully
 
 volumes:
