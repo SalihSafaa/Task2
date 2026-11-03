@@ -1,102 +1,47 @@
 @HostAddress = http://localhost:8080
-@Token=Bearer {{login.response.body.$.accessToken}}
-@savedRefreshToken ={{login.response.body.$.refreshToken}}
-### /api/products?pageNumber=1&pageSize=100&search=&categoryId=&minPrice=  ###
-GET {{HostAddress}}/api/Products?pageNumber=1&pageSize=10
-###
-GET  {{HostAddress}}/api/Products
+@Token = Bearer {{login.response.body.$.accessToken}}
+@savedRefreshToken = {{userLogin.response.body.$.refreshToken}}
+
+# Credentials come from your local .env file (never hard-code them here).
+# Requires the VS Code "REST Client" extension, which reads .env via $dotenv.
+
+### === HEALTH ===
+
+### Health check (expect 200 Healthy; 503 Unhealthy if the database is down)
+GET {{HostAddress}}/health
 
 
-### Products - Get by id
-GET {{HostAddress}}/api/Products/8
+### === AUTH ===
 
-### Products - Create
-POST {{HostAddress}}/api/Products
-Authorization: {{Token}}
-Content-Type: application/json
-
-{
-  "name": "Laptop",
-  "price": 999.99,
-  "stock": 25,
-  "createdAt": "2026-09-01T10:00:00",
-  "categoryId": 1
-}
-
-### Products - Update
-PUT {{HostAddress}}/api/Products/50
-Content-Type: application/json
-
-{
-  "name": "Laptop Pro",
-  "price": 1299.99,
-  "stock": 15,
-  "createdAt": "2026-09-01T10:00:00",
-  "categoryId": 8
-}
-
-### Products - Delete
-DELETE {{HostAddress}}/api/Products/9
-
-### Categories - Get all
-GET {{HostAddress}}/api/Categories
-
-### Categories - Get by id
-GET {{HostAddress}}/api/Categories/8
-
-### Categories - Get products by category
-GET {{HostAddress}}/api/Categories/8/products
-
-### Categories - Create
-POST {{HostAddress}}/api/Categories
-Content-Type: application/json
-
-{
-  "name": "New digital books",
-  "description": " difital books licensea and ebooks"
-}
-
-### Categories - Update
-PUT {{HostAddress}}/api/Categories/9
-Content-Type: application/json
-
-{
-  "name": "Updated digital books",
-  "description": "Updated digital books and ebooks"
-}
-
-### Categories - Delete
-DELETE {{HostAddress}}/api/Categories/9
-
-### Reports - Get Inventory Value
-GET {{HostAddress}}/api/Reports/inventory-value
-### Reports - Get Most Expensive Product
-GET {{HostAddress}}/api/Reports/most-expensive
-### out of stock products
-GET {{HostAddress}}/api/Reports/out-of-stock
-### Category stats 
-GET {{HostAddress}}/api/Reports/category-stats
-### register user
-POST {{HostAddress}}/api/Auth/register
-Content-Type: application/json
-
-{
-  "username": "newuser1111",
-  "password": "TestPassword123!"
-}
-
-
-# 
-### Login Admin ###
+### Login as admin (run this first; the other requests reuse its token)
 # @name login
 POST {{HostAddress}}/api/Auth/login
 Content-Type: application/json
 
 {
-  "username": "admin",
-  "password": "12345678"
+  "username": "{{$dotenv ADMIN_SEED_USERNAME}}",
+  "password": "{{$dotenv ADMIN_SEED_PASSWORD}}"
 }
-### update user
+
+### Register a user (expect 201/200; running it twice expect 409)
+POST {{HostAddress}}/api/Auth/register
+Content-Type: application/json
+
+{
+  "username": "testuser",
+  "password": "TestPassword123!"
+}
+
+### Register the same name in a different case (expect 409, usernames are case-insensitive)
+POST {{HostAddress}}/api/Auth/register
+Content-Type: application/json
+
+{
+  "username": "TESTUSER",
+  "password": "TestPassword123!"
+}
+
+### Update a user's role (admin only)
 PUT {{HostAddress}}/api/Auth/user
 Authorization: {{Token}}
 Content-Type: application/json
@@ -107,101 +52,86 @@ Content-Type: application/json
 }
 
 
-### === REFRESH TOKEN FLOW ===
+### === CATEGORIES ===
 
-### 1. Login — capture the refresh token from the response
-### After running this, copy the "refreshToken" value from the response
-### into @savedRefreshToken below
-# @name login
-POST {{HostAddress}}/api/Auth/login
-Content-Type: application/json
+### Categories - Get all
+GET {{HostAddress}}/api/Categories
 
-{
-  "username": "testuser",
-  "password": "TestPassword123!"
-}
-
-### Paste the value from step 1's response here before running anything below
-
-### 2. Refresh — happy path. Should return 200 with a NEW access token
-### AND a new refresh token. Copy the new refresh token into
-### @savedRefreshToken again before running test 3 or 4.
-# @name login
-POST {{HostAddress}}/api/Auth/refresh
-Content-Type: application/json
-
-{
-  "refreshToken": "{{savedRefreshToken}}"
-}
-
-### 3. Reuse detection — run test 2 ONCE (so the token above gets rotated
-### and revoked), then immediately run this SAME request again with the
-### SAME now-stale @savedRefreshToken value (don't update it first).
-### Expect: 401. This is the token showing up a second time after rotation.
-POST {{HostAddress}}/api/Auth/refresh
-Content-Type: application/json
-
-{
-  "refreshToken": "{{savedRefreshToken}}"
-}
-
-### 4. Garbage token — never issued, shouldn't hash-match anything.
-### Expect: 401 Invalid refresh token.
-POST {{HostAddress}}/api/Auth/refresh
-Content-Type: application/json
-
-{
-  "refreshToken": "this-was-never-a-real-token-12345"
-}
-
-### 5. Empty token — should get caught by [Required] on RefreshRequestDto,
-### never even reach the service. Expect: 400 Bad Request.
-POST {{HostAddress}}/api/Auth/refresh
-Content-Type: application/json
-
-{
-  "refreshToken": ""
-}
-
-### === LOGOUT FLOW ===
-
-### 6. Login again fresh, to get a token pair not already burned by the
-### tests above. Update @savedRefreshToken from this response before
-### continuing to test 7.
-POST {{HostAddress}}/api/Auth/login
-Content-Type: application/json
-
-{
-  "username": "testuser",
-  "password": "TestPassword123!"
-}
-
-### 7. Logout — requires a valid ACCESS token in Authorization header
-### (this is [Authorize]), body carries the refresh token to revoke.
-### Update {{Token}} at the top of the file with the access token from
-### test 6 if it's expired. Expect: 204 No Content.
-POST {{HostAddress}}/api/Auth/logout
+### Categories - Create (the response id is reused by the product requests below)
+# @name createCategory
+POST {{HostAddress}}/api/Categories
 Authorization: {{Token}}
 Content-Type: application/json
 
 {
-  "refreshToken": "{{savedRefreshToken}}"
+  "name": "Demo category {{$timestamp}}",
+  "description": "Created from the .http file"
 }
 
-### 8. Try to refresh with the token you just logged out with.
-### Expect: 401 — it's now revoked, same as an expired/garbage token
-### from the service's point of view.
-POST {{HostAddress}}/api/Auth/refresh
+### Categories - Get by id
+GET {{HostAddress}}/api/Categories/{{createCategory.response.body.$.id}}
+
+### Categories - Get products by category
+GET {{HostAddress}}/api/Categories/{{createCategory.response.body.$.id}}/products
+
+### Categories - Update
+PUT {{HostAddress}}/api/Categories/{{createCategory.response.body.$.id}}
+Authorization: {{Token}}
 Content-Type: application/json
 
 {
-  "refreshToken": "{{savedRefreshToken}}"
+  "name": "Updated demo category {{$timestamp}}",
+  "description": "Updated from the .http file"
 }
 
-### === STOCK ADJUSTMENTS ===
 
-### Stock adjustment - success (expect 200 and a newStock value)
-POST {{HostAddress}}/api/Products/1003/stock-adjustments
+### === PRODUCTS ===
+
+### Products - list (paged)
+GET {{HostAddress}}/api/Products?pageNumber=1&pageSize=10
+
+### Products - filter by category
+GET {{HostAddress}}/api/Products?categoryId={{createCategory.response.body.$.id}}&pageNumber=1&pageSize=10
+
+### Products - search by name
+GET {{HostAddress}}/api/Products?search=lap&pageNumber=1&pageSize=10
+
+### Products - Create (stock 10; the stock requests below use this product)
+# @name createProduct
+POST {{HostAddress}}/api/Products
+Authorization: {{Token}}
+Content-Type: application/json
+
+{
+  "name": "Laptop",
+  "price": 999.99,
+  "stock": 10,
+  "createdAt": "2026-09-01T10:00:00",
+  "categoryId": {{createCategory.response.body.$.id}}
+}
+
+### Products - Get by id
+GET {{HostAddress}}/api/Products/{{createProduct.response.body.$.id}}
+
+### Products - Update
+PUT {{HostAddress}}/api/Products/{{createProduct.response.body.$.id}}
+Authorization: {{Token}}
+Content-Type: application/json
+
+{
+  "name": "Laptop Pro",
+  "price": 1299.99,
+  "stock": 10,
+  "createdAt": "2026-09-01T10:00:00",
+  "categoryId": {{createCategory.response.body.$.id}}
+}
+
+
+### === STOCK ADJUSTMENTS ===
+### Run "Products - Create" above first. The product starts with stock 10.
+
+### Stock adjustment - success (expect 200 and newStock = 9 the first time)
+POST {{HostAddress}}/api/Products/{{createProduct.response.body.$.id}}/stock-adjustments
 Authorization: {{Token}}
 Content-Type: application/json
 
@@ -210,18 +140,28 @@ Content-Type: application/json
   "reason": "Sold in store"
 }
 
-### Stock adjustment - too much (expect 409 Conflict)
-POST {{HostAddress}}/api/Products/1003/stock-adjustments
+### Stock adjustment - restock (expect 200)
+POST {{HostAddress}}/api/Products/{{createProduct.response.body.$.id}}/stock-adjustments
 Authorization: {{Token}}
 Content-Type: application/json
 
 {
-  "delta": -999,
+  "delta": 5,
+  "reason": "Delivery received"
+}
+
+### Stock adjustment - more than available (expect 409 Conflict, stock unchanged)
+POST {{HostAddress}}/api/Products/{{createProduct.response.body.$.id}}/stock-adjustments
+Authorization: {{Token}}
+Content-Type: application/json
+
+{
+  "delta": -1000,
   "reason": "Should be rejected"
 }
 
 ### Stock adjustment - missing product (expect 404)
-POST {{HostAddress}}/api/Products/99999/stock-adjustments
+POST {{HostAddress}}/api/Products/99999999/stock-adjustments
 Authorization: {{Token}}
 Content-Type: application/json
 
@@ -229,7 +169,129 @@ Content-Type: application/json
   "delta": -1,
   "reason": "No such product"
 }
-###
-GET {{HostAddress}}/api/products?categoryId=1&pageNumber=1&pageSize=10
-###
-GET {{HostAddress}}/api/products?search=lap&pageNumber=1&pageSize=10
+
+### Stock adjustment - out of range delta (expect 400)
+POST {{HostAddress}}/api/Products/{{createProduct.response.body.$.id}}/stock-adjustments
+Authorization: {{Token}}
+Content-Type: application/json
+
+{
+  "delta": -5000,
+  "reason": "Out of range"
+}
+
+### Stock adjustment - zero delta (expect 400)
+POST {{HostAddress}}/api/Products/{{createProduct.response.body.$.id}}/stock-adjustments
+Authorization: {{Token}}
+Content-Type: application/json
+
+{
+  "delta": 0,
+  "reason": "Does nothing"
+}
+
+### Stock adjustment - no token (expect 401)
+POST {{HostAddress}}/api/Products/{{createProduct.response.body.$.id}}/stock-adjustments
+Content-Type: application/json
+
+{
+  "delta": -1,
+  "reason": "Not logged in"
+}
+
+
+### === REPORTS ===
+
+### Reports - Inventory value
+GET {{HostAddress}}/api/Reports/inventory-value
+
+### Reports - Most expensive product
+GET {{HostAddress}}/api/Reports/most-expensive
+
+### Reports - Out of stock products
+GET {{HostAddress}}/api/Reports/out-of-stock
+
+### Reports - Category stats
+GET {{HostAddress}}/api/Reports/category-stats
+
+
+### === CLEANUP (admin only) ===
+
+### Products - Delete
+DELETE {{HostAddress}}/api/Products/{{createProduct.response.body.$.id}}
+Authorization: {{Token}}
+
+### Categories - Delete
+DELETE {{HostAddress}}/api/Categories/{{createCategory.response.body.$.id}}
+Authorization: {{Token}}
+
+
+### === REFRESH TOKEN FLOW ===
+
+### 1. Login as the test user (register "testuser" above first).
+### The refresh token is picked up automatically as {{savedRefreshToken}}.
+# @name userLogin
+POST {{HostAddress}}/api/Auth/login
+Content-Type: application/json
+
+{
+  "username": "testuser",
+  "password": "TestPassword123!"
+}
+
+### 2. Refresh, happy path. Expect 200 with a NEW access token and a new refresh token.
+# @name refresh
+POST {{HostAddress}}/api/Auth/refresh
+Content-Type: application/json
+
+{
+  "refreshToken": "{{savedRefreshToken}}"
+}
+
+### 3. Reuse detection: send the SAME (now rotated and revoked) token again.
+### Run step 2 once, then run this. Expect 401.
+POST {{HostAddress}}/api/Auth/refresh
+Content-Type: application/json
+
+{
+  "refreshToken": "{{savedRefreshToken}}"
+}
+
+### 4. Garbage token, never issued. Expect 401.
+POST {{HostAddress}}/api/Auth/refresh
+Content-Type: application/json
+
+{
+  "refreshToken": "this-was-never-a-real-token-12345"
+}
+
+### 5. Empty token, caught by [Required] on RefreshRequestDto. Expect 400.
+POST {{HostAddress}}/api/Auth/refresh
+Content-Type: application/json
+
+{
+  "refreshToken": ""
+}
+
+
+### === LOGOUT FLOW ===
+
+### 6. Login again to get a fresh token pair (run "1. Login as the test user" again).
+
+### 7. Logout: needs a valid ACCESS token (admin login above works) and the refresh token to revoke.
+### Expect 204 No Content.
+POST {{HostAddress}}/api/Auth/logout
+Authorization: {{Token}}
+Content-Type: application/json
+
+{
+  "refreshToken": "{{savedRefreshToken}}"
+}
+
+### 8. Refresh with the token you just logged out with. Expect 401 (it is revoked).
+POST {{HostAddress}}/api/Auth/refresh
+Content-Type: application/json
+
+{
+  "refreshToken": "{{savedRefreshToken}}"
+}
