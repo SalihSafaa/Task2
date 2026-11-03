@@ -3,7 +3,7 @@ services:
     image: mcr.microsoft.com/mssql/server:2022-latest
     environment:
       ACCEPT_EULA: "Y"
-      MSSQL_SA_PASSWORD: "${DB_PASSWORD}"
+      MSSQL_SA_PASSWORD: "${DB_PASSWORD:?DB_PASSWORD is required}"
     ports:
       - "1433:1433"
     volumes:
@@ -21,11 +21,11 @@ services:
     ports:
       - "8080:8080"
     environment:
-      ASPNETCORE_ENVIRONMENT: "Development"
-      ConnectionStrings__DefaultConnection: "Server=db;Database=ProductCatalogDb;User Id=sa;Password=${DB_PASSWORD};TrustServerCertificate=True"
-      Jwt__Key: "${JWT_KEY}"
-      Seed__AdminUsername: "admin"
-      Seed__AdminPassword: "${ADMIN_SEED_PASSWORD}"
+      ASPNETCORE_ENVIRONMENT: "${ASPNETCORE_ENVIRONMENT:-Development}"
+      ConnectionStrings__DefaultConnection: "Server=db;Database=ProductCatalogDb;User Id=sa;Password=${DB_PASSWORD:?DB_PASSWORD is required};TrustServerCertificate=True"
+      Jwt__Key: "${JWT_KEY:?JWT_KEY is required}"
+      Seed__AdminUsername: "${ADMIN_SEED_USERNAME:?ADMIN_SEED_USERNAME is required}"
+      Seed__AdminPassword: "${ADMIN_SEED_PASSWORD:?ADMIN_SEED_PASSWORD is required}"
     depends_on:
       db:
         condition: service_healthy
